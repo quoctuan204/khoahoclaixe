@@ -13,8 +13,8 @@ const AdminDashboard = () => {
   const [filterStatus, setFilterStatus] = useState('all')
   const [error, setError] = useState(null)
   const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage] = useState(10) // Số lượng học viên mỗi trang
-  const { token } = useAuth()
+  const [itemsPerPage] = useState(10)
+  const { token, role } = useAuth()
   const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE) || 'http://localhost:5000'
   const navigate = useNavigate()
   
@@ -75,10 +75,14 @@ const AdminDashboard = () => {
 
   const handleDelete = async (id) => {
     if (window.confirm('Bạn có chắc chắn muốn xóa học viên này không?')) {
+      const reason = window.prompt('Vui lòng nhập lý do xóa:', 'Thay đổi ý định')
+      if (reason === null) return // Người dùng ấn Hủy
+
       try {
         const response = await fetch(`${API_BASE}/api/registrations/${id}`, {
           method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${token}` }
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reason })
         })
         if (response.ok) {
           setRegistrations(prev => prev.filter(item => item._id !== id))
@@ -397,11 +401,13 @@ const AdminDashboard = () => {
                           className='text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded-md transition-colors mr-2'>
                           Chi tiết
                         </button>
-                        <button 
-                          onClick={() => handleDelete(item._id)}
-                          className='text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-3 py-1 rounded-md transition-colors'>
-                          Xóa
-                        </button>
+                        {role !== 'staff' && (
+                          <button 
+                            onClick={() => handleDelete(item._id)}
+                            className='text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-3 py-1 rounded-md transition-colors'>
+                            Xóa
+                          </button>
+                        )}
                       </td>
                     </tr>
                   )})

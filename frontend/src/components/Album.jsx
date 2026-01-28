@@ -1,7 +1,10 @@
 import React from 'react'
+import { useNavigate } from 'react-router-dom'
 import { assets } from '../assets/assets'
 
 const Album = () => {
+  const navigate = useNavigate()
+
   return (
     <div className='py-16 lg:py-24 bg-[#f8f9fa]' id='thu-vien'>
       <div className='layout-container flex justify-center'>
@@ -18,7 +21,10 @@ const Album = () => {
                         Một số hình ảnh thực tế tại sân tập và các buổi lễ tốt nghiệp của học viên.
                     </p>
                 </div>
-                <button className='cursor-pointer hidden md:flex items-center gap-2 text-[#135bec] font-bold hover:text-blue-700 transition-colors'>
+                <button 
+                    onClick={() => navigate('/thu-vien-anh')}
+                    className='cursor-pointer hidden md:flex items-center gap-2 text-[#135bec] font-bold hover:text-blue-700 transition-colors'
+                >
                     Xem tất cả hình ảnh <span className='material-symbols-outlined'>arrow_forward</span>
                 </button>
             </div>
@@ -50,7 +56,10 @@ const Album = () => {
                 </div>
             </div>
 
-            <button className='md:hidden mt-6 flex items-center justify-center gap-2 w-full py-3 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50'>
+            <button 
+                onClick={() => navigate('/thu-vien-anh')}
+                className='md:hidden mt-6 flex items-center justify-center gap-2 w-full py-3 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50'
+            >
                 Xem thêm hình ảnh
             </button>
         </div>

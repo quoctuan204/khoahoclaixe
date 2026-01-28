@@ -5,23 +5,11 @@ import SmartLink from './SmartLink'
 import { useAuth } from '../context/AuthContext'
 import { Link } from 'react-router-dom'
 
-const RoleControls = ({ isAdmin, logout }) => {
-  if (isAdmin) {
-    return (
-      <div className='flex items-center gap-2'>
-        <Link to='/admin' className='text-sm text-[#135bec] hover:underline'>Giảng viên</Link>
-        <button onClick={logout} className='text-sm bg-[#f97316] text-white px-3 py-1 rounded'>Đăng xuất</button>
-      </div>
-    )
-  }
-
-  // normal users: hide quick admin login control
-  return null
-}
-
 const Navbar = () => {
   const [open, setOpen] = useState(false)
-  const { isAdmin, logout } = useAuth()
+  const { isAdmin, logout, user } = useAuth()
+  const [dropdownOpen, setDropdownOpen] = useState(false)
+  const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE) || 'http://localhost:5000'
 
   return (
     <div className="sticky top-0 z-50 bg-white py-5 font-medium shadow-sm">
@@ -53,6 +41,7 @@ const Navbar = () => {
             { to: '/gioi_thieu', label: 'Giới thiệu' },
             { to: '/khoa_hoc', label: 'Khóa học' },
             { to: '/hoc_phi', label: 'Học phí' },
+            { to: '/thu-vien-video', label: 'Video' },
             { to: '/tin_tuc', label: 'Tin tức' },
             { to: '/lien_he', label: 'Liên hệ' },
           ].map(item => (
@@ -82,11 +71,65 @@ const Navbar = () => {
           </a>
 
           {/* ROLE SWITCH (dev-friendly) */}
-          <div className="hidden sm:flex items-center gap-2 mr-2">
-            <small className='text-xs text-gray-500 mr-2'>Role:</small>
-            {/* show different controls based on role */}
-            <RoleControls isAdmin={isAdmin} logout={logout} />
-          </div>
+          {isAdmin && (
+            <div className="relative hidden sm:block">
+              <button 
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                className='flex items-center gap-3 focus:outline-none'
+              >
+                <div className='text-right'>
+                  <p className='text-sm font-bold text-gray-900'>{user?.fullName || user?.username || 'Admin'}</p>
+                  <p className='text-xs text-gray-500'>Giảng viên</p>
+                </div>
+                {user?.avatar ? (
+                  <img 
+                    src={user.avatar.startsWith('/uploads/') ? `${API_BASE}${user.avatar}` : user.avatar} 
+                    alt="Avatar" 
+                    className='h-10 w-10 rounded-full object-cover border border-blue-200'
+                  />
+                ) : (
+                  <div className='h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-[#135bec] font-bold border border-blue-200 uppercase hover:bg-blue-200 transition-colors'>
+                    {user?.fullName ? user.fullName.charAt(0) : (user?.username ? user.username.charAt(0) : 'A')}
+                  </div>
+                )}
+              </button>
+
+              {dropdownOpen && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setDropdownOpen(false)}></div>
+                  <div className='absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-20 border border-gray-200'>
+                    <Link 
+                      to="/admin"
+                      onClick={() => setDropdownOpen(false)}
+                      className='w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2 font-medium'
+                    >
+                      <span className="material-symbols-outlined text-lg">dashboard</span>
+                      Trang quản trị
+                    </Link>
+                    <Link 
+                      to="/admin/profile"
+                      onClick={() => setDropdownOpen(false)}
+                      className='w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2 font-medium'
+                    >
+                      <span className="material-symbols-outlined text-lg">person</span>
+                      Hồ sơ cá nhân
+                    </Link>
+                    <div className="border-t border-gray-100 my-1"></div>
+                    <button
+                      onClick={() => {
+                        logout();
+                        setDropdownOpen(false);
+                      }}
+                      className='w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 font-medium'
+                    >
+                      <span className="material-symbols-outlined text-lg">logout</span>
+                      Đăng xuất
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
 
           {/* MOBILE MENU BUTTON */}
           <button
@@ -117,12 +160,14 @@ const Navbar = () => {
           </button>
 
           {/* CTA DESKTOP */}
-          <SmartLink
-            to="/dangkykhoahoc"
-            className="hidden md:flex h-10 items-center justify-center rounded-lg bg-blue-600 px-5 text-sm font-bold text-white shadow-md hover:bg-blue-700"
-          >
-            Đăng ký ngay
-          </SmartLink>
+          {!isAdmin && (
+            <SmartLink
+              to="/dangkykhoahoc"
+              className="hidden md:flex h-10 items-center justify-center rounded-lg bg-blue-600 px-5 text-sm font-bold text-white shadow-md hover:bg-blue-700"
+            >
+              Đăng ký ngay
+            </SmartLink>
+          )}
         </div>
       </div>
 
@@ -139,6 +184,9 @@ const Navbar = () => {
             <SmartNavLink to="/tuition" onClick={() => setOpen(false)} className="py-3 border-b">
               Học phí
             </SmartNavLink>
+            <SmartNavLink to="/thu-vien-video" onClick={() => setOpen(false)} className="py-3 border-b">
+              Video
+            </SmartNavLink>
             <SmartNavLink to="/news" onClick={() => setOpen(false)} className="py-3 border-b">
               Tin tức
             </SmartNavLink>
@@ -147,13 +195,15 @@ const Navbar = () => {
             </SmartNavLink>
 
             {/* CTA MOBILE */}
-            <SmartLink
-              to="/dangkykhoahoc"
-              onClick={() => setOpen(false)}
-              className="mt-4 w-full text-center py-3 bg-blue-600 text-white font-bold rounded-lg"
-            >
-              Đăng ký ngay
-            </SmartLink>
+            {!isAdmin && (
+              <SmartLink
+                to="/dangkykhoahoc"
+                onClick={() => setOpen(false)}
+                className="mt-4 w-full text-center py-3 bg-blue-600 text-white font-bold rounded-lg"
+              >
+                Đăng ký ngay
+              </SmartLink>
+            )}
           </nav>
         </div>
       )}

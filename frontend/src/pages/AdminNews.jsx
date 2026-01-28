@@ -8,7 +8,7 @@ const AdminNews = () => {
   const [news, setNews] = useState([])
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
-  const { token } = useAuth()
+  const { token, role } = useAuth()
   const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE) || 'http://localhost:5000'
 
   useEffect(() => {
@@ -37,10 +37,14 @@ const AdminNews = () => {
 
   const handleDelete = async (id) => {
     if (!window.confirm('Bạn có chắc muốn xóa bài viết này?')) return
+    const reason = window.prompt('Vui lòng nhập lý do xóa:', 'Thông tin cũ')
+    if (reason === null) return
+
     try {
       const res = await fetch(`${API_BASE}/api/news/${id}`, { 
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason })
       })
       if (res.ok) {
         toast.success('Đã xóa bài viết')
@@ -107,7 +111,9 @@ const AdminNews = () => {
                 <td className='px-6 py-4 text-gray-500 text-sm'>{new Date(item.createdAt).toLocaleDateString('vi-VN')}</td>
                 <td className='px-6 py-4 whitespace-nowrap text-sm font-medium'>
                   <button onClick={() => navigate(`/admin/news/${item._id}`)} className='text-blue-600 hover:text-blue-900 mr-4'>Sửa</button>
-                  <button onClick={() => handleDelete(item._id)} className='text-red-600 hover:text-red-900'>Xóa</button>
+                  {role !== 'staff' && (
+                    <button onClick={() => handleDelete(item._id)} className='text-red-600 hover:text-red-900'>Xóa</button>
+                  )}
                 </td>
               </tr>
             ))}

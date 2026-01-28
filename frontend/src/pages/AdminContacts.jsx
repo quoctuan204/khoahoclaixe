@@ -9,7 +9,7 @@ const AdminContacts = () => {
   const [loading, setLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage] = useState(10)
-  const { token } = useAuth()
+  const { token, role } = useAuth()
   const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE) || 'http://localhost:5000'
 
   useEffect(() => {
@@ -33,10 +33,14 @@ const AdminContacts = () => {
 
   const handleDelete = async (id) => {
     if (!window.confirm('Bạn có chắc muốn xóa yêu cầu này?')) return
+    const reason = window.prompt('Vui lòng nhập lý do xóa:', 'Đã xử lý xong')
+    if (reason === null) return
+
     try {
       const res = await fetch(`${API_BASE}/api/contacts/${id}`, { 
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason })
       })
       if (res.ok) {
         setContacts(prev => prev.filter(item => item._id !== id))
@@ -172,7 +176,9 @@ const AdminContacts = () => {
                     className={`mr-2 px-3 py-1 rounded transition-colors ${item.status === 'contacted' ? 'text-gray-600 bg-gray-100 hover:bg-gray-200' : 'text-blue-600 bg-blue-50 hover:bg-blue-100'}`}>
                     {item.status === 'contacted' ? 'Hoàn tác' : 'Đã liên hệ'}
                   </button>
-                  <button onClick={() => handleDelete(item._id)} className='text-red-600 hover:text-red-900 bg-red-50 px-3 py-1 rounded'>Xóa</button>
+                  {role !== 'staff' && (
+                    <button onClick={() => handleDelete(item._id)} className='text-red-600 hover:text-red-900 bg-red-50 px-3 py-1 rounded'>Xóa</button>
+                  )}
                 </td>
               </tr>
             ))}

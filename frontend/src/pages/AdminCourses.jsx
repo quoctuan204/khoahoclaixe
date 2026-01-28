@@ -9,7 +9,7 @@ const AdminCourses = () => {
   const navigate = useNavigate()
   const [courses, setCourses] = useState([])
   const [loading, setLoading] = useState(true)
-  const { token } = useAuth()
+  const { token, role } = useAuth()
   const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE) || 'http://localhost:5000'
 
   useEffect(() => {
@@ -50,11 +50,14 @@ const AdminCourses = () => {
 
   const handleDelete = async (id) => {
     if (!window.confirm('Bạn có chắc chắn muốn xóa khóa học này?')) return
+    const reason = window.prompt('Vui lòng nhập lý do xóa:', 'Ngừng tuyển sinh')
+    if (reason === null) return
 
     try {
       const res = await fetch(`${API_BASE}/api/products/${id}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason })
       })
       if (res.ok) {
         setCourses(prev => prev.filter(c => c.id !== id))
@@ -138,12 +141,14 @@ const AdminCourses = () => {
                       <span className="material-symbols-outlined text-[18px]">edit</span>
                       Sửa
                     </button>
-                    <button 
-                      onClick={() => handleDelete(product.id)}
-                      className='text-white bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg transition-colors flex items-center gap-2 inline-flex'>
-                      <span className="material-symbols-outlined text-[18px]">delete</span>
-                      Xóa
-                    </button>
+                    {role !== 'staff' && (
+                      <button 
+                        onClick={() => handleDelete(product.id)}
+                        className='text-white bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg transition-colors flex items-center gap-2 inline-flex'>
+                        <span className="material-symbols-outlined text-[18px]">delete</span>
+                        Xóa
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}

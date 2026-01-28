@@ -9,7 +9,7 @@ export const useAuth = () => useContext(AuthContext)
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
-  const [token, setToken] = useState(localStorage.getItem('token') || null)
+  const [token, setToken] = useState(localStorage.getItem('token') || sessionStorage.getItem('token') || null)
   const [role, setRole] = useState(null)
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
@@ -29,7 +29,7 @@ export const AuthProvider = ({ children }) => {
 
         if (res.ok) {
           const data = await res.json()
-          setUser({ username: data.username })
+          setUser(data)
           setRole(data.role)
         } else {
           logout()
@@ -45,8 +45,14 @@ export const AuthProvider = ({ children }) => {
     verifyToken()
   }, [])
 
-  const login = (newToken, newRole, username) => {
-    localStorage.setItem('token', newToken)
+  const login = (newToken, newRole, username, remember = false) => {
+    if (remember) {
+      localStorage.setItem('token', newToken)
+      sessionStorage.removeItem('token')
+    } else {
+      sessionStorage.setItem('token', newToken)
+      localStorage.removeItem('token')
+    }
     setToken(newToken)
     setRole(newRole)
     setUser({ username })
@@ -55,10 +61,15 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem('token')
+    sessionStorage.removeItem('token')
     setToken(null)
     setUser(null)
     setRole(null)
     navigate('/login')
+  }
+
+  const updateUser = (userData) => {
+    setUser(prev => ({ ...prev, ...userData }))
   }
 
   const value = {
@@ -68,7 +79,8 @@ export const AuthProvider = ({ children }) => {
     isAdmin: !!user,
     loading,
     login,
-    logout
+    logout,
+    updateUser
   }
 
   return (
