@@ -160,8 +160,16 @@ const isValidEmail = (email) => {
 };
 
 // --- ENCRYPTION HELPERS ---
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'; // Fallback key
+// QUAN TRỌNG: Key này phải cố định. Nếu đổi key, dữ liệu cũ (SĐT, CCCD) sẽ không giải mã được.
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
 const IV_LENGTH = 16;
+
+// Kiểm tra độ dài Key ngay khi khởi động để tránh lỗi runtime
+if (!ENCRYPTION_KEY || Buffer.from(ENCRYPTION_KEY, 'hex').length !== 32) {
+  console.error('LỖI CẤU HÌNH NGHIÊM TRỌNG: Biến môi trường ENCRYPTION_KEY không được thiết lập hoặc không hợp lệ.');
+  console.error('ENCRYPTION_KEY phải là một chuỗi HEX dài 64 ký tự (32 bytes). Hãy tạo và thêm nó vào file .env');
+  process.exit(1); // Dừng server ngay lập tức để báo lỗi
+}
 
 const encrypt = (text) => {
   if (!text) return text;
