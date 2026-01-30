@@ -3,17 +3,36 @@ import { Link } from 'react-router-dom'
 import { assets } from '../assets/assets' 
 
 const HeroCourse = () => {
-  const slides = [
-    { key: 'b1', img: assets.b1sotudong, title: 'Hạng B1 - Số tự động', productId: 'b1-sotudong' },
-    { key: 'b2', img: assets.b1sosan, title: 'Hạng B2 - Số sàn', productId: 'b2-sosan' },
-    { key: 'c', img: assets.c1xetai, title: 'Hạng C - Xe tải', productId: 'c-xetai' }
-  ]
+  const [slides, setSlides] = useState([])
   const [idx, setIdx] = useState(0)
+  const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE) || 'http://localhost:5000'
 
   useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/products`)
+        if (res.ok) {
+          const data = await res.json()
+          const validProducts = data.filter(p => p.isVisible !== false)
+          const newSlides = validProducts.map(p => ({
+            key: p.id,
+            img: (p.image && p.image.startsWith('/uploads/')) ? `${API_BASE}${p.image}` : (p.image || assets.b1sotudong),
+            title: p.title,
+            productId: p.id
+          }))
+          setSlides(newSlides.length > 0 ? newSlides : [])
+        }
+      } catch (error) {
+        console.error('Failed to fetch hero courses', error)
+      }
+    }
+    fetchProducts()
+
     const t = setInterval(() => setIdx(i => (i + 1) % slides.length), 4000)
     return () => clearInterval(t)
-  }, [])
+  }, [slides.length, API_BASE])
+
+  if (slides.length === 0) return null
 
   return (
     <div className='px-4 py-10 md:px-10 lg:px-20 xl:px-40 flex flex-1 justify-center bg-white dark:bg-[#1a202c]'>

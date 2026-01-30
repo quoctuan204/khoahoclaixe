@@ -3,26 +3,75 @@ import { assets } from '../assets/assets'
 import SmartLink from './SmartLink' 
 
 const Hero = () => {
-  const images = [assets.heroImg, assets.heroImg2, assets.heroImg3];
+  const [slides, setSlides] = useState([])
   const [currentIndex, setCurrentIndex] = useState(0);
+  const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE) || 'http://localhost:5000'
+
+  // Dữ liệu mặc định nếu chưa có banner
+  const defaultSlides = [
+    { 
+        image: assets.heroImg, 
+        title: 'Vững tay lái \n Trọn Niềm Tin', 
+        description: 'Trung tâm đào tạo lái xe chuẩn quốc tế với đội ngũ giáo viên giàu kinh nghiệm, xe tập đời mới và cam kết tỉ lệ đậu lên đến 99%.',
+        link: '/lien_he',
+        buttonText: 'Đăng ký tư vấn'
+    },
+    { 
+        image: assets.heroImg2, 
+        title: 'Hệ thống xe tập \n Đời mới 2024', 
+        description: 'Trải nghiệm học lái xe trên dàn xe Vios, Accent đời mới, máy lạnh mát rượi, trang bị đầy đủ thiết bị an toàn.',
+        link: '/hethongxetaplai',
+        buttonText: 'Xem chi tiết xe'
+    }
+  ]
 
   useEffect(() => {
+    const fetchBanners = async () => {
+        try {
+            const res = await fetch(`${API_BASE}/api/banners`)
+            if (res.ok) {
+                const data = await res.json()
+                if (data.length > 0) {
+                    const processed = data.map(b => ({
+                        ...b,
+                        image: b.image.startsWith('/uploads/') ? `${API_BASE}${b.image}` : b.image
+                    }))
+                    setSlides(processed)
+                } else {
+                    setSlides(defaultSlides)
+                }
+            } else {
+                setSlides(defaultSlides)
+            }
+        } catch {
+            setSlides(defaultSlides)
+        }
+    }
+    fetchBanners()
+  }, [API_BASE])
+
+  useEffect(() => {
+    if (slides.length === 0) return
     const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % images.length);
+      setCurrentIndex((prev) => (prev + 1) % slides.length);
     }, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [slides.length]);
+
+  if (slides.length === 0) return null // Hoặc loading skeleton
+
+  const currentSlide = slides[currentIndex]
 
   return (
     <div className='relative w-full'>
     <div className='layout-container flex w-full'>
         <div className='layout-content-container flex w-full flex-col'>
                 <div className='relative overflow-hidden min-h-[500px] lg:min-h-[600px] flex items-center justify-start p-6 lg:p-16 shadow-lg'>
-                    {images.map((img, index) => (
+                    {slides.map((slide, index) => (
                       <div
                         key={index}
                         className={`absolute inset-0 bg-cover bg-center transition-all duration-2000 ${index === currentIndex ? 'opacity-100 scale-125' : 'opacity-0 scale-100'}`}
-                        style={{ backgroundImage: `url(${img})` }}
+                        style={{ backgroundImage: `url(${slide.image})` }}
                       />
                     ))}
 
@@ -34,17 +83,17 @@ const Hero = () => {
                         Uy tín hàng đầu
                       </div>
 
-                      <h1 className='text-white text-4xl lg:text-6xl font-black leading-tight tracking-[-0.033em]'>
-                        Vững tay lái <br/> <span className='text-primary-300'>Trọn Niềm Tin</span>
+                      <h1 className='text-white text-4xl lg:text-6xl font-black leading-tight tracking-[-0.033em] whitespace-pre-line'>
+                        {currentSlide.title}
                       </h1>
 
                       <h2 className='text-gray-100 text-base lg:text-lg font-normal leading-relaxed max-w-[540px]'>
-                        Trung tâm đào tạo lái xe chuẩn quốc tế với đội ngũ giáo viên giàu kinh nghiệm, xe tập đời mới và cam kết tỉ lệ đậu lên đến 99%.
+                        {currentSlide.description}
                       </h2>
 
                       <div className='flex flex-wrap gap-4 mt-4'>
-                        <SmartLink to="/lien_he" className='flex min-w-[160px] cursor-pointer items-center justify-center rounded-lg h-12 px-6 bg-blue-500 hover:bg-blue-700 text-white text-base font-bold transition-all duration-300 shadow-lg hover:shadow-blue-500/50'>
-                          <span className='truncate'>Đăng ký tư vấn</span>
+                        <SmartLink to={currentSlide.link || '/lien_he'} className='flex min-w-[160px] cursor-pointer items-center justify-center rounded-lg h-12 px-6 bg-blue-500 hover:bg-blue-700 text-white text-base font-bold transition-all duration-300 shadow-lg hover:shadow-blue-500/50'>
+                          <span className='truncate'>{currentSlide.buttonText || 'Đăng ký tư vấn'}</span>
                           <span className='material-symbols-outlined ml-2 text-[20px]'>arrow_forward</span>
                         </SmartLink>
                         <SmartLink to="/khoa_hoc" className='flex min-w-[160px] cursor-pointer items-center justify-center rounded-lg h-12 px-6 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/30 text-white text-base font-bold transition-all'>

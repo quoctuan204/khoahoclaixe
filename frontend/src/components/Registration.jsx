@@ -10,6 +10,7 @@ const Registration = () => {
     phone: '',
     course: ''
   })
+  const [loading, setLoading] = useState(false)
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -18,6 +19,7 @@ const Registration = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setLoading(true)
     try {
       const response = await fetch(`${API_BASE}/api/contact-advice`, {
         method: 'POST',
@@ -35,6 +37,8 @@ const Registration = () => {
     } catch (error) {
       console.error('Error:', error)
       toast.error('Có lỗi xảy ra. Vui lòng kiểm tra kết nối.')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -115,8 +119,8 @@ const Registration = () => {
                             </select>
                         </div>
                         {!isAdmin ? (
-                            <button className='cursor-pointer mt-4 w-full rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-bold h-12 text-lg shadow-lg transition-colors' type='submit'>
-                                Gửi đăng ký
+                            <button disabled={loading} className={`cursor-pointer mt-4 w-full rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-bold h-12 text-lg shadow-lg transition-colors ${loading ? 'opacity-70 cursor-not-allowed' : ''}`} type='submit'>
+                                {loading ? 'Đang gửi...' : 'Gửi đăng ký'}
                             </button>
                         ) : (
                             <div className='mt-4 w-full rounded-lg bg-gray-100 text-gray-500 font-bold h-12 flex items-center justify-center border border-gray-200'>

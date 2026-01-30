@@ -43,6 +43,7 @@ import AdminCourses from './pages/AdminCourses'
 import AdminCourseDetail from './pages/AdminCourseDetail'
 import AdminNews from './pages/AdminNews'
 import AdminNewsDetail from './pages/AdminNewsDetail'
+import AdminBanners from './pages/AdminBanners'
 import AdminGallery from './pages/AdminGallery'
 import AdminVideos from './pages/AdminVideos'
 import Settings from './pages/Settings'
@@ -80,7 +81,13 @@ const AppRoutes = () => {
       .catch(() => setLoadingSettings(false))
   }, [API_BASE])
 
-  if (loadingSettings) return null
+  if (loadingSettings) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-white">
+        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-600"></div>
+      </div>
+    )
+  }
 
   // Logic hiển thị trang bảo trì:
   // Hiện nếu: Đang bảo trì AND Không phải Admin AND Không phải trang Login AND Không phải trang Admin
@@ -104,13 +111,13 @@ const AppRoutes = () => {
               <Route path='contacts' element={<AdminContacts />} />
               <Route path='courses' element={<AdminCourses />} />
               <Route path='courses/:id' element={<AdminCourseDetail />} />
+              <Route path='banners' element={<AdminBanners />} />
               <Route path='gallery' element={<AdminGallery />} />
               <Route path='videos' element={<AdminVideos />} />
               <Route path='news' element={<AdminNews />} />
               <Route path='news/:id' element={<AdminNewsDetail />} />
               <Route path='audit-logs' element={<AdminAuditLog />} />
               
-              {/* Chỉ Super Admin mới vào được trang Cài đặt */}
               <Route path='settings' element={<AdminRoute allowedRoles={['admin', 'superadmin']}><Settings /></AdminRoute>} />
               <Route path='profile' element={<AdminProfile />} />
               <Route path='student/:id' element={<StudentDetail />} />

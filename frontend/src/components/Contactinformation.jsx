@@ -10,6 +10,7 @@ const Contactinformation = () => {
     course: '',
     note: ''
   })
+  const [loading, setLoading] = useState(false)
   const [settings, setSettings] = useState({
     address: 'GJQ2+345 Cần Đước, Long An, Việt Nam',
     hotline: '1900 1234',
@@ -32,6 +33,7 @@ const Contactinformation = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setLoading(true)
     try {
       const response = await fetch(`${API_BASE}/api/contact-advice`, {
         method: 'POST',
@@ -53,6 +55,8 @@ const Contactinformation = () => {
     } catch (error) {
       console.error('Error:', error)
       toast.error('Có lỗi xảy ra. Vui lòng thử lại.')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -218,9 +222,10 @@ const Contactinformation = () => {
                 </div>
                 {!isAdmin ? (
                   <button 
-                    className='mt-4 flex h-12 w-full cursor-pointer items-center justify-center rounded-lg bg-[#135bec] hover:bg-[#135bec]-hover text-white text-base font-bold shadow-lg shadow-[#135bec]/20 transition-all active:scale-[0.98]'
+                    disabled={loading}
+                    className={`mt-4 flex h-12 w-full cursor-pointer items-center justify-center rounded-lg bg-[#135bec] hover:bg-[#135bec]-hover text-white text-base font-bold shadow-lg shadow-[#135bec]/20 transition-all active:scale-[0.98] ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
                     type='submit'>
-                      Gửi đăng ký ngay
+                      {loading ? 'Đang xử lý...' : 'Gửi đăng ký ngay'}
                   </button>
                 ) : (
                   <div className='mt-4 flex h-12 w-full items-center justify-center rounded-lg bg-gray-100 text-gray-500 font-medium border border-gray-200'>

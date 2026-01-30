@@ -12,6 +12,7 @@ const productSchema = new mongoose.Schema({
   description: String,
   theoryFee: String,
   examFee: String,
+  isVisible: { type: Boolean, default: true },
   createdAt: { type: Date, default: Date.now }
 });
 

@@ -3,6 +3,7 @@ import { toast } from 'react-toastify'
 import * as XLSX from 'xlsx'
 import Skeleton from '../components/Skeleton'
 import { useAuth } from '../context/AuthContext'
+import DeleteModal from '../components/DeleteModal'
 
 const AdminContacts = () => {
   const [contacts, setContacts] = useState([])
@@ -11,6 +12,8 @@ const AdminContacts = () => {
   const [itemsPerPage] = useState(10)
   const { token, role } = useAuth()
   const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE) || 'http://localhost:5000'
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deleteId, setDeleteId] = useState(null)
 
   useEffect(() => {
     fetchContacts()
@@ -31,25 +34,30 @@ const AdminContacts = () => {
     }
   }
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Bạn có chắc muốn xóa yêu cầu này?')) return
-    const reason = window.prompt('Vui lòng nhập lý do xóa:', 'Đã xử lý xong')
-    if (reason === null) return
+  const handleDelete = (id) => {
+    setDeleteId(id)
+    setShowDeleteModal(true)
+  }
 
+  const confirmDelete = async () => {
+    if (!deleteId) return
     try {
-      const res = await fetch(`${API_BASE}/api/contacts/${id}`, { 
+      const res = await fetch(`${API_BASE}/api/contacts/${deleteId}`, { 
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reason })
+        body: JSON.stringify({ reason: 'Admin xóa trực tiếp' })
       })
       if (res.ok) {
-        setContacts(prev => prev.filter(item => item._id !== id))
+        setContacts(prev => prev.filter(item => item._id !== deleteId))
         toast.success('Đã xóa thành công')
       } else {
         toast.error('Xóa thất bại')
       }
     } catch {
       toast.error('Lỗi kết nối')
+    } finally {
+      setShowDeleteModal(false)
+      setDeleteId(null)
     }
   }
 
@@ -133,16 +141,18 @@ const AdminContacts = () => {
 
   return (
     <div className='w-full'>
-      <div className='flex justify-between items-center mb-8'>
-        <h1 className='text-3xl font-bold text-gray-900'>Danh sách Yêu cầu Tư vấn</h1>
+      <div className='flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4'>
+        <h1 className='text-2xl md:text-3xl font-bold text-gray-900'>Yêu cầu Tư vấn</h1>
         <button 
           onClick={handleExportExcel}
-          className='bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2'>
-          <span className="material-symbols-outlined">download</span> Xuất Excel
+          className='bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium w-full md:w-auto justify-center'>
+          <span className="material-symbols-outlined text-[20px]">download</span> Xuất Excel
         </button>
       </div>
 
-      <div className='bg-white shadow-md rounded-lg overflow-hidden border border-gray-200'>
+      {/* Desktop/Tablet Table View */}
+      <div className='hidden md:block bg-white shadow-md rounded-lg overflow-hidden border border-gray-200'>
+        <div className='overflow-x-auto'>
         <table className='min-w-full divide-y divide-gray-200'>
           <thead className='bg-gray-50'>
             <tr>
@@ -177,13 +187,56 @@ const AdminContacts = () => {
                     {item.status === 'contacted' ? 'Hoàn tác' : 'Đã liên hệ'}
                   </button>
                   {role !== 'staff' && (
-                    <button onClick={() => handleDelete(item._id)} className='text-red-600 hover:text-red-900 bg-red-50 px-3 py-1 rounded'>Xóa</button>
+                    <button onClick={() => handleDelete(item._id)} className='text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors inline-flex items-center justify-center' title="Xóa">
+                      <span className="material-symbols-outlined text-[20px]">delete</span>
+                    </button>
                   )}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
+        </div>
+      </div>
+
+      {/* Mobile Card View */}
+      <div className='md:hidden space-y-4'>
+        {currentItems.map((item) => (
+          <div key={item._id} className='bg-white p-4 rounded-lg shadow-sm border border-gray-200'>
+            <div className='flex justify-between items-start mb-3'>
+              <div>
+                <h3 className='font-bold text-gray-900 text-lg'>{item.fullname}</h3>
+                <a href={`tel:${item.phone}`} className='text-blue-600 font-medium text-sm flex items-center gap-1 mt-1'>
+                  <span className="material-symbols-outlined text-[16px]">call</span> {item.phone}
+                </a>
+              </div>
+              <span className={`px-2 py-1 text-xs font-bold rounded-full ${item.status === 'contacted' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                {item.status === 'contacted' ? 'Đã LH' : 'Chờ XL'}
+              </span>
+            </div>
+            
+            <div className='text-sm text-gray-600 space-y-2 mb-4'>
+              <p><span className='font-semibold'>Khóa học:</span> {item.course}</p>
+              <p><span className='font-semibold'>Ngày gửi:</span> {new Date(item.createdAt).toLocaleDateString('vi-VN')}</p>
+              {item.note && <p className='bg-gray-50 p-2 rounded italic text-gray-500'>"{item.note}"</p>}
+            </div>
+
+            <div className='flex gap-2 pt-3 border-t border-gray-100'>
+              <button 
+                onClick={() => handleStatusChange(item._id, item.status)}
+                className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${item.status === 'contacted' ? 'bg-gray-100 text-gray-600 hover:bg-gray-200' : 'bg-blue-600 text-white hover:bg-blue-700'}`}>
+                {item.status === 'contacted' ? 'Hoàn tác' : 'Xác nhận LH'}
+              </button>
+              {role !== 'staff' && (
+                <button 
+                  onClick={() => handleDelete(item._id)}
+                  className='px-3 py-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg text-sm font-medium border border-red-100 flex items-center justify-center' title="Xóa">
+                  <span className="material-symbols-outlined text-[20px]">delete</span>
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
       </div>
 
       {contacts.length > itemsPerPage && (
@@ -215,6 +268,15 @@ const AdminContacts = () => {
           </button>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <DeleteModal 
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={confirmDelete}
+        title="Xóa yêu cầu tư vấn"
+        message={<>Bạn có chắc chắn muốn xóa yêu cầu này không? <br/>Hành động này không thể hoàn tác.</>}
+      />
     </div>
   )
 }

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import Skeleton from '../components/Skeleton'
 import { useAuth } from '../context/AuthContext'
+import DeleteModal from '../components/DeleteModal'
 
 const AdminNews = () => {
   const [news, setNews] = useState([])
@@ -10,6 +11,8 @@ const AdminNews = () => {
   const navigate = useNavigate()
   const { token, role } = useAuth()
   const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE) || 'http://localhost:5000'
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deleteId, setDeleteId] = useState(null)
 
   useEffect(() => {
     fetchNews()
@@ -35,25 +38,30 @@ const AdminNews = () => {
     }
   }
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Bạn có chắc muốn xóa bài viết này?')) return
-    const reason = window.prompt('Vui lòng nhập lý do xóa:', 'Thông tin cũ')
-    if (reason === null) return
+  const handleDelete = (id) => {
+    setDeleteId(id)
+    setShowDeleteModal(true)
+  }
 
+  const confirmDelete = async () => {
+    if (!deleteId) return
     try {
-      const res = await fetch(`${API_BASE}/api/news/${id}`, { 
+      const res = await fetch(`${API_BASE}/api/news/${deleteId}`, { 
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reason })
+        body: JSON.stringify({ reason: 'Admin xóa trực tiếp' })
       })
       if (res.ok) {
         toast.success('Đã xóa bài viết')
-        setNews(prev => prev.filter(item => item._id !== id))
+        setNews(prev => prev.filter(item => item._id !== deleteId))
       } else {
         toast.error('Xóa thất bại')
       }
     } catch {
       toast.error('Lỗi kết nối')
+    } finally {
+      setShowDeleteModal(false)
+      setDeleteId(null)
     }
   }
 
@@ -120,6 +128,15 @@ const AdminNews = () => {
           </tbody>
         </table>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <DeleteModal 
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={confirmDelete}
+        title="Xóa bài viết"
+        message={<>Bạn có chắc chắn muốn xóa bài viết này không? <br/>Hành động này không thể hoàn tác.</>}
+      />
     </div>
   )
 }

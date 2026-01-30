@@ -21,8 +21,8 @@ const Gallery = () => {
           fetch(`${API_BASE}/api/gallery`)
         ])
 
-        const newsData = await newsRes.json()
-        const productsData = await productsRes.json()
+        const newsData = newsRes.ok ? await newsRes.json() : []
+        const productsData = productsRes.ok ? await productsRes.json() : []
         const galleryData = galleryRes.ok ? await galleryRes.json() : []
 
         const allImages = []

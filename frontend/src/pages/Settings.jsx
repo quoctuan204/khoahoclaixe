@@ -43,7 +43,15 @@ const Settings = () => {
         const res = await fetch(`${API_BASE}/api/settings`)
         if (res.ok) {
           const data = await res.json()
-          setFormData({ ...data, maintenanceMode: data.maintenanceMode || false })
+          setFormData({
+            centerName: data.centerName || '',
+            address: data.address || '',
+            hotline: data.hotline || '',
+            email: data.email || '',
+            zalo: data.zalo || '',
+            facebook: data.facebook || '',
+            maintenanceMode: data.maintenanceMode || false
+          })
         }
       } catch (error) {
         console.error(error)
@@ -63,7 +71,10 @@ const Settings = () => {
           const res = await fetch(`${API_BASE}/api/admins`, {
             headers: { 'Authorization': `Bearer ${token}` }
           })
-          if (res.ok) setAdmins(await res.json())
+          if (res.ok) {
+            const data = await res.json()
+            if (Array.isArray(data)) setAdmins(data)
+          }
         } catch (error) {
           console.error(error)
         } finally {
@@ -122,7 +133,10 @@ const Settings = () => {
         setNewAdmin({ username: '', password: '', fullName: '', role: 'admin' })
         // Refresh list
         const refreshRes = await fetch(`${API_BASE}/api/admins`, { headers: { 'Authorization': `Bearer ${token}` } })
-        if (refreshRes.ok) setAdmins(await refreshRes.json())
+        if (refreshRes.ok) {
+          const data = await refreshRes.json()
+          if (Array.isArray(data)) setAdmins(data)
+        }
       } else {
         toast.error(data.message || 'Tạo thất bại')
       }
@@ -160,7 +174,10 @@ const Settings = () => {
         setShowEditModal(false)
         // Refresh list
         const refreshRes = await fetch(`${API_BASE}/api/admins`, { headers: { 'Authorization': `Bearer ${token}` } })
-        if (refreshRes.ok) setAdmins(await refreshRes.json())
+        if (refreshRes.ok) {
+          const data = await refreshRes.json()
+          if (Array.isArray(data)) setAdmins(data)
+        }
       } else {
         toast.error(data.message || 'Cập nhật thất bại')
       }
@@ -208,7 +225,10 @@ const Settings = () => {
         toast.success('Đã mở khóa tài khoản')
         // Refresh list
         const refreshRes = await fetch(`${API_BASE}/api/admins`, { headers: { 'Authorization': `Bearer ${token}` } })
-        if (refreshRes.ok) setAdmins(await refreshRes.json())
+        if (refreshRes.ok) {
+          const data = await refreshRes.json()
+          if (Array.isArray(data)) setAdmins(data)
+        }
       } else {
         toast.error('Mở khóa thất bại')
       }
@@ -328,7 +348,7 @@ const Settings = () => {
           {/* Admin List */}
           <div>
             <h3 className='text-lg font-bold mb-4 text-gray-800'>Danh sách tài khoản</h3>
-            {adminLoading ? <div>Đang tải...</div> : (
+            {adminLoading ? <div>Đang tải...</div> : (admins && admins.length > 0 ? (
               <div className='overflow-x-auto'>
                 <table className='min-w-full divide-y divide-gray-200 border'>
                   <thead className='bg-gray-50'>
@@ -364,7 +384,7 @@ const Settings = () => {
                   </tbody>
                 </table>
               </div>
-            )}
+            ) : <p className="text-gray-500">Chưa có tài khoản nào.</p>)}
           </div>
         </div>
       )}

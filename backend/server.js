@@ -1,21 +1,23 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const nodemailer = require('nodemailer');
 const mongoose = require('mongoose');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
-const crypto = require('crypto');
 const cron = require('node-cron');
 
 dotenv.config();
 
 const app = express();
+
+// --- IMPORTS TỪ CẤU TRÚC MỚI ---
+const { encrypt, decrypt } = require('./utils/encryption');
+const { protect } = require('./middleware/authMiddleware');
+const authRoutes = require('./routes/authRoutes');
+const sendEmailUtil = require('./utils/sendEmail');
 
 // 1. SECURITY: Helmet (Bảo mật Headers)
 app.use(helmet({
@@ -24,10 +26,22 @@ app.use(helmet({
 
 // 2. SECURITY: CORS (Chỉ cho phép Frontend gọi API)
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173', // Cấu hình URL frontend của bạn
+  origin: (origin, callback) => {
+    // Cho phép request không có origin (như mobile app, curl) hoặc từ localhost
+    if (!origin || origin.includes('localhost') || origin.includes('127.0.0.1')) {
+      return callback(null, true);
+    }
+    callback(new Error('Not allowed by CORS'));
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 }));
+
+// Request Logger (Giúp debug xem request có đến được server không)
+app.use((req, res, next) => {
+  console.log(`[${new Date().toLocaleTimeString()}] ${req.method} ${req.url}`);
+  next();
+});
 
 app.use(express.json());
 
@@ -51,20 +65,36 @@ const storage = multer.diskStorage({
   }
 });
 
-const upload = multer({ storage: storage });
+// Filter for images
+const fileFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith('image/')) {
+    cb(null, true);
+  } else {
+    cb(new Error('Chỉ cho phép upload file ảnh (jpg, jpeg, png, gif)!'), false);
+  }
+};
+
+const upload = multer({ 
+  storage: storage,
+  fileFilter: fileFilter,
+  limits: { fileSize: 5 * 1024 * 1024 } // Limit 5MB
+});
 
 // Serve static files from uploads directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Upload Route
-app.post('/api/upload', upload.single('image'), (req, res) => {
-  if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
-  const imageUrl = `/uploads/${req.file.filename}`;
-  res.json({ imageUrl });
+app.post('/api/upload', (req, res) => {
+  upload.single('image')(req, res, (err) => {
+    if (err) return res.status(400).json({ message: err.message || 'Lỗi upload file' });
+    if (!req.file) return res.status(400).json({ message: 'Chưa chọn file' });
+    const imageUrl = `/uploads/${req.file.filename}`;
+    res.json({ imageUrl });
+  });
 });
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI).then(() => console.log('MongoDB connected'))
+mongoose.connect(process.env.MONGO_URI).then(() => console.log('MongoDB connected successfully'))
   .catch(err => console.error('MongoDB connection error:', err));
 
 // Models
@@ -78,6 +108,7 @@ const Gallery = require('./models/Gallery');
 const Video = require('./models/Video');
 const Notification = require('./models/Notification');
 const AuditLog = require('./models/AuditLog');
+const Banner = require('./models/Banner');
 
 // --- AUTOMATIC BACKUP ---
 const backupDir = path.join(__dirname, 'backups');
@@ -106,7 +137,8 @@ const performBackup = async () => {
       Gallery,
       Video,
       Notification,
-      AuditLog
+      AuditLog,
+      Banner
     };
 
     for (const [name, model] of Object.entries(models)) {
@@ -125,15 +157,6 @@ const performBackup = async () => {
 // Schedule backup daily at 02:00 AM
 cron.schedule('0 2 * * *', performBackup);
 
-// Email transporter
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
-});
-
 // 3. SECURITY: Rate Limiting (Chống Spam/DDoS)
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 phút
@@ -142,15 +165,13 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
+// --- MOUNT ROUTES ---
+app.use('/api', authRoutes); // Mount Auth Routes
+
 // Function to send email
 const sendEmail = async (subject, text) => {
   try {
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: process.env.ADMIN_EMAIL,
-      subject,
-      text
-    });
+    await sendEmailUtil('nguyentuann29t12@gmail.com', subject, text);
     console.log('Email sent successfully');
   } catch (error) {
     console.error('Error sending email:', error);
@@ -165,68 +186,6 @@ const isValidPhoneNumber = (phone) => {
 // Validate Email
 const isValidEmail = (email) => {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-};
-
-// --- ENCRYPTION HELPERS ---
-// QUAN TRỌNG: Key này phải cố định. Nếu đổi key, dữ liệu cũ (SĐT, CCCD) sẽ không giải mã được.
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
-const IV_LENGTH = 16;
-
-// Kiểm tra độ dài Key ngay khi khởi động để tránh lỗi runtime
-if (!ENCRYPTION_KEY || Buffer.from(ENCRYPTION_KEY, 'hex').length !== 32) {
-  console.error('LỖI CẤU HÌNH NGHIÊM TRỌNG: Biến môi trường ENCRYPTION_KEY không được thiết lập hoặc không hợp lệ.');
-  console.error('ENCRYPTION_KEY phải là một chuỗi HEX dài 64 ký tự (32 bytes). Hãy tạo và thêm nó vào file .env');
-  process.exit(1); // Dừng server ngay lập tức để báo lỗi
-}
-
-const encrypt = (text) => {
-  if (!text) return text;
-  try {
-    const iv = crypto.randomBytes(IV_LENGTH);
-    const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(ENCRYPTION_KEY, 'hex'), iv);
-    let encrypted = cipher.update(text);
-    encrypted = Buffer.concat([encrypted, cipher.final()]);
-    return iv.toString('hex') + ':' + encrypted.toString('hex');
-  } catch (error) {
-    console.error('Encryption error:', error);
-    return text;
-  }
-};
-
-const decrypt = (text) => {
-  if (!text) return text;
-  try {
-    const textParts = text.split(':');
-    if (textParts.length < 2) return text; // Not encrypted
-    const iv = Buffer.from(textParts.shift(), 'hex');
-    const encryptedText = Buffer.from(textParts.join(':'), 'hex');
-    const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(ENCRYPTION_KEY, 'hex'), iv);
-    let decrypted = decipher.update(encryptedText);
-    decrypted = Buffer.concat([decrypted, decipher.final()]);
-    return decrypted.toString();
-  } catch (error) {
-    return text;
-  }
-};
-
-// --- MIDDLEWARE & HELPERS ---
-
-// Middleware to protect routes and get admin user
-const protect = (req, res, next) => {
-  let token;
-  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-    try {
-      token = req.headers.authorization.split(' ')[1];
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret_key_an_toan_tuyet_doi');
-      req.adminId = decoded.id; // Get admin ID from token
-      return next(); // Thêm return để đảm bảo dừng hàm tại đây
-    } catch (error) {
-      return res.status(401).json({ message: 'Not authorized, token failed' });
-    }
-  }
-  if (!token) {
-    return res.status(401).json({ message: 'Not authorized, no token' });
-  }
 };
 
 const logActivity = async (req, action, target, targetId, details) => {
@@ -555,6 +514,41 @@ app.delete('/api/videos/:id', protect, async (req, res) => {
   }
 });
 
+// --- BANNER ROUTES ---
+
+// Get all banners
+app.get('/api/banners', async (req, res) => {
+  try {
+    const banners = await Banner.find().sort({ order: 1, createdAt: -1 });
+    res.json(banners);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching banners' });
+  }
+});
+
+// Create banner
+app.post('/api/banners', protect, async (req, res) => {
+  try {
+    const newBanner = new Banner(req.body);
+    await newBanner.save();
+    await logActivity(req, 'CREATE', 'Banner', newBanner._id, `Created banner: ${newBanner.title}`);
+    res.status(201).json(newBanner);
+  } catch (error) {
+    res.status(500).json({ message: 'Error creating banner' });
+  }
+});
+
+// Delete banner
+app.delete('/api/banners/:id', protect, async (req, res) => {
+  try {
+    await Banner.findByIdAndDelete(req.params.id);
+    await logActivity(req, 'DELETE', 'Banner', req.params.id, 'Deleted banner');
+    res.json({ message: 'Banner deleted' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting banner' });
+  }
+});
+
 // --- SETTINGS ROUTES ---
 
 // Get Settings
@@ -599,397 +593,6 @@ app.delete('/api/registrations/:id', protect, async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Error deleting registration' });
-  }
-});
-
-// --- AUTHENTICATION ROUTES ---
-
-// Login Route
-const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 30, // Tăng giới hạn IP để ưu tiên logic khóa tài khoản theo Username
-  message: 'Bạn đã gửi quá nhiều yêu cầu đăng nhập. Vui lòng thử lại sau.'
-});
-
-app.post('/api/login', loginLimiter, async (req, res) => {
-  const { username, password } = req.body;
-  
-  try {
-    let admin = await Admin.findOne({ username });
-    
-    // Case 1: Admin exists in DB
-    if (admin) {
-      // 1. Kiểm tra xem tài khoản có đang bị khóa không
-      if (admin.lockUntil && admin.lockUntil > Date.now()) {
-        const waitMinutes = Math.ceil((admin.lockUntil - Date.now()) / 60000);
-        let timeDisplay = `${waitMinutes} phút`;
-        if (waitMinutes > 60) {
-          const hours = Math.floor(waitMinutes / 60);
-          const mins = waitMinutes % 60;
-          timeDisplay = `${hours} giờ ${mins} phút`;
-        }
-        return res.status(403).json({ message: `Tài khoản đã bị khóa. Vui lòng thử lại sau ${timeDisplay}.` });
-      }
-
-      const isMatch = await bcrypt.compare(password, admin.password);
-      if (isMatch) {
-        // 2. Đăng nhập thành công -> Reset số lần sai và mở khóa (nếu có)
-        if (admin.loginAttempts > 0 || admin.lockUntil || admin.lockoutCount > 0) {
-          admin.loginAttempts = 0;
-          admin.lockUntil = undefined;
-          admin.lockoutCount = 0;
-          await admin.save();
-        }
-
-        // --- 2FA: Generate Code & Send Email ---
-        const code = Math.floor(100000 + Math.random() * 900000).toString();
-        admin.twoFactorCode = code;
-        admin.twoFactorExpires = Date.now() + 5 * 60 * 1000; // Hết hạn sau 5 phút
-        await admin.save();
-
-        if (admin.email) {
-          const subject = 'Mã xác thực đăng nhập (2FA)';
-          const text = `Mã xác thực của bạn là: ${code}\nMã này sẽ hết hạn sau 5 phút.`;
-          await transporter.sendMail({ from: process.env.EMAIL_USER, to: admin.email, subject, text });
-        } else {
-          console.log(`[2FA] Admin ${admin.username} chưa có email. Mã code: ${code}`);
-        }
-
-        return res.json({ require2FA: true, username: admin.username, message: 'Vui lòng nhập mã xác thực đã được gửi đến email.' });
-      } else {
-        // 3. Sai mật khẩu -> Tăng số lần sai
-        admin.loginAttempts = (admin.loginAttempts || 0) + 1;
-        
-        // Nếu sai quá 5 lần -> Khóa 15 phút
-        if (admin.loginAttempts >= 5) {
-          admin.lockoutCount = (admin.lockoutCount || 0) + 1;
-          
-          let lockTime = 15 * 60 * 1000; // 15 phút
-          let msg = 'Tài khoản đã bị khóa 15 phút do nhập sai quá 5 lần.';
-
-          // Nếu đã bị khóa 1 lần trước đó (lockoutCount >= 2) -> Khóa 24h
-          if (admin.lockoutCount >= 2) {
-            lockTime = 24 * 60 * 60 * 1000; // 24 giờ
-            msg = 'Tài khoản đã bị khóa 24 giờ do nhập sai liên tiếp nhiều lần.';
-          }
-
-          admin.lockUntil = Date.now() + lockTime;
-          admin.loginAttempts = 0; // Reset số lần thử để bắt đầu chu kỳ mới sau khi hết khóa
-          await admin.save();
-          return res.status(403).json({ message: msg });
-        }
-        
-        await admin.save();
-        return res.status(401).json({ message: `Sai mật khẩu. Bạn còn ${5 - admin.loginAttempts} lần thử.` });
-      }
-    }
-    
-    // 2. Fallback: Kiểm tra biến môi trường (Chỉ dùng khi chưa có Admin trong DB)
-    const envUser = process.env.ADMIN_USERNAME || 'admin';
-    const envPass = process.env.ADMIN_PASSWORD || 'admin123';
-
-    if (username === envUser && password === envPass) {
-      // Create the first admin in DB if it doesn't exist
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(envPass, salt);
-      const newAdmin = await Admin.findOneAndUpdate(
-        { username: envUser },
-        { $setOnInsert: { username: envUser, password: hashedPassword, role: 'superadmin' } },
-        { upsert: true, new: true }
-      );
-      console.log('[Auth] Created/Verified default admin account from .env');
-      
-      // --- 2FA for Fallback Account ---
-      const code = Math.floor(100000 + Math.random() * 900000).toString();
-      newAdmin.twoFactorCode = code;
-      newAdmin.twoFactorExpires = Date.now() + 5 * 60 * 1000;
-      await newAdmin.save();
-
-      if (newAdmin.email) {
-         const subject = 'Mã xác thực đăng nhập (2FA)';
-         const text = `Mã xác thực của bạn là: ${code}`;
-         await transporter.sendMail({ from: process.env.EMAIL_USER, to: newAdmin.email, subject, text });
-      } else {
-         console.log(`[2FA] Fallback Admin chưa có email. Mã code: ${code}`);
-      }
-
-      return res.json({ require2FA: true, username: newAdmin.username, message: 'Vui lòng nhập mã xác thực.' });
-    }
-    
-    // If nothing matches
-    return res.status(401).json({ message: 'Sai tên đăng nhập hoặc mật khẩu' });
-
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Lỗi server' });
-  }
-});
-
-// Verify 2FA Route
-app.post('/api/verify-2fa', loginLimiter, async (req, res) => {
-  const { username, code } = req.body;
-  try {
-    const admin = await Admin.findOne({ username });
-    if (!admin) return res.status(404).json({ message: 'Tài khoản không tồn tại' });
-
-    if (admin.twoFactorCode !== code || admin.twoFactorExpires < Date.now()) {
-      return res.status(400).json({ message: 'Mã xác thực không đúng hoặc đã hết hạn' });
-    }
-
-    // Clear 2FA code
-    admin.twoFactorCode = undefined;
-    admin.twoFactorExpires = undefined;
-    await admin.save();
-
-    const token = jwt.sign(
-      { id: admin._id, username: admin.username, role: admin.role },
-      process.env.JWT_SECRET || 'secret_key_an_toan_tuyet_doi',
-      { expiresIn: '1d' }
-    );
-    return res.json({ token, role: admin.role, username: admin.username });
-  } catch (error) {
-    res.status(500).json({ message: 'Lỗi xác thực' });
-  }
-});
-
-// Change Password Route
-app.post('/api/change-password', protect, async (req, res) => {
-  const { currentPassword, newPassword } = req.body;
-  try {
-    const admin = await Admin.findById(req.adminId);
-    if (!admin) return res.status(404).json({ message: 'Không tìm thấy tài khoản Admin.' });
-
-    // Send email notification
-    if (admin.email) {
-      const subject = 'Thông báo thay đổi mật khẩu';
-      const text = `Xin chào ${admin.fullName || admin.username},\n\nMật khẩu tài khoản quản trị của bạn vừa được thay đổi thành công.\nNếu bạn không thực hiện hành động này, vui lòng liên hệ ngay với quản trị viên cấp cao.\n\nTrân trọng,\nHệ thống quản lý.`;
-      await sendEmail(subject, text);
-      // Note: sendEmail currently sends to ADMIN_EMAIL from .env, you might want to update sendEmail to accept a 'to' address or create a new helper.
-      // For now, assuming sendEmail is fixed or we use transporter directly here for specific user email.
-    }
-
-    const isMatch = await bcrypt.compare(currentPassword, admin.password);
-    if (!isMatch) return res.status(401).json({ message: 'Mật khẩu hiện tại không đúng.' });
-
-    // Mã hóa mật khẩu mới trước khi lưu
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(newPassword, salt);
-
-    admin.password = hashedPassword;
-    await admin.save();
-
-    res.json({ message: 'Đổi mật khẩu thành công' });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Lỗi đổi mật khẩu' });
-  }
-});
-
-// Verify Token Route (AuthContext sẽ gọi API này khi reload trang)
-app.get('/api/me', async (req, res) => {
-  try {
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) return res.status(401).json({ message: 'No token provided' });
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret_key_an_toan_tuyet_doi');
-    
-    // Fetch fresh data from DB
-    const admin = await Admin.findById(decoded.id).select('-password');
-    if (!admin) return res.status(404).json({ message: 'User not found' });
-
-    res.json({ 
-      username: admin.username, 
-      role: admin.role,
-      fullName: admin.fullName,
-      email: admin.email,
-      avatar: admin.avatar
-    });
-  } catch (error) {
-    res.status(401).json({ message: 'Invalid token' });
-  }
-});
-
-// Get Admin Profile
-app.get('/api/admin/profile', protect, async (req, res) => {
-  try {
-    const admin = await Admin.findById(req.adminId).select('-password');
-    if (admin) {
-      res.json(admin);
-    } else {
-      res.status(404).json({ message: 'Admin not found' });
-    }
-  } catch (error) {
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-// Update Admin Profile
-app.put('/api/admin/profile', protect, async (req, res) => {
-  try {
-    const admin = await Admin.findByIdAndUpdate(req.adminId, req.body, { new: true }).select('-password');
-    if (!admin) return res.status(404).json({ message: 'Admin not found' });
-    
-    // Send email notification
-    if (admin.email) {
-      const subject = 'Cập nhật hồ sơ thành công';
-      const text = `Xin chào ${admin.fullName || admin.username},\n\nThông tin hồ sơ của bạn đã được cập nhật.\n\nTrân trọng,\nHệ thống quản lý.`;
-      // Using transporter directly to send to the specific admin's email
-      await transporter.sendMail({ from: process.env.EMAIL_USER, to: admin.email, subject, text });
-    }
-    res.json(admin);
-  } catch (error) {
-    res.status(500).json({ message: 'Server error on update' });
-  }
-});
-
-// --- ADMIN MANAGEMENT ROUTES (SuperAdmin Only) ---
-
-// Middleware check SuperAdmin
-const checkSuperAdmin = async (req, res, next) => {
-  try {
-    const admin = await Admin.findById(req.adminId);
-    if (admin && admin.role === 'superadmin') {
-      next();
-    } else {
-      res.status(403).json({ message: 'Yêu cầu quyền SuperAdmin' });
-    }
-  } catch (error) {
-    res.status(500).json({ message: 'Lỗi xác thực quyền hạn' });
-  }
-};
-
-// Get all admins
-app.get('/api/admins', protect, checkSuperAdmin, async (req, res) => {
-  try {
-    const admins = await Admin.find().select('-password').sort({ createdAt: -1 });
-    res.json(admins);
-  } catch (error) {
-    res.status(500).json({ message: 'Lỗi lấy danh sách admin' });
-  }
-});
-
-// Create admin
-app.post('/api/admins', protect, checkSuperAdmin, async (req, res) => {
-  try {
-    const { username, password, role, fullName, email } = req.body;
-    
-    const exists = await Admin.findOne({ username });
-    if (exists) return res.status(400).json({ message: 'Tên đăng nhập đã tồn tại' });
-
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    const newAdmin = new Admin({
-      username,
-      password: hashedPassword,
-      role: role || 'admin',
-      fullName,
-      email
-    });
-
-    await newAdmin.save();
-    await logActivity(req, 'CREATE', 'Admin', newAdmin.username, `Created admin account: ${username}`);
-    res.status(201).json({ message: 'Tạo tài khoản thành công' });
-  } catch (error) {
-    res.status(500).json({ message: 'Lỗi tạo tài khoản' });
-  }
-});
-
-// Update admin (SuperAdmin only)
-app.put('/api/admins/:id', protect, checkSuperAdmin, async (req, res) => {
-  try {
-    const { username, password, role, fullName, email } = req.body;
-    const adminId = req.params.id;
-
-    // Check if username exists (excluding current admin)
-    if (username) {
-      const exists = await Admin.findOne({ username, _id: { $ne: adminId } });
-      if (exists) return res.status(400).json({ message: 'Tên đăng nhập đã tồn tại' });
-    }
-
-    const updateData = { username, role, fullName, email };
-
-    // Only hash and update password if provided
-    if (password && password.trim() !== '') {
-      const salt = await bcrypt.genSalt(10);
-      updateData.password = await bcrypt.hash(password, salt);
-    }
-
-    const updatedAdmin = await Admin.findByIdAndUpdate(adminId, updateData, { new: true }).select('-password');
-    if (!updatedAdmin) return res.status(404).json({ message: 'Không tìm thấy tài khoản' });
-
-    // Send email notification
-    if (updatedAdmin.email) {
-      const subject = 'Tài khoản của bạn đã được cập nhật';
-      const text = `Xin chào ${updatedAdmin.fullName || updatedAdmin.username},\n\nThông tin tài khoản của bạn đã được cập nhật bởi Superadmin.\n\nTrân trọng,\nHệ thống quản lý.`;
-      await transporter.sendMail({ from: process.env.EMAIL_USER, to: updatedAdmin.email, subject, text });
-    }
-
-    await logActivity(req, 'UPDATE', 'Admin', updatedAdmin.username, `Updated admin info: ${updatedAdmin.username}`);
-    res.json({ message: 'Cập nhật thành công', admin: updatedAdmin });
-  } catch (error) {
-    res.status(500).json({ message: 'Lỗi cập nhật tài khoản' });
-  }
-});
-
-// Reset admin password (SuperAdmin only)
-app.put('/api/admins/:id/reset-password', protect, checkSuperAdmin, async (req, res) => {
-  try {
-    const { newPassword } = req.body;
-    if (!newPassword || newPassword.length < 6) {
-      return res.status(400).json({ message: 'Mật khẩu mới phải có ít nhất 6 ký tự' });
-    }
-
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(newPassword, salt);
-
-    const admin = await Admin.findByIdAndUpdate(req.params.id, { password: hashedPassword });
-    if (!admin) return res.status(404).json({ message: 'Không tìm thấy tài khoản' });
-
-    // Send email notification
-    if (admin.email) {
-      const subject = 'Mật khẩu của bạn đã được đặt lại';
-      const text = `Xin chào ${admin.fullName || admin.username},\n\nMật khẩu của bạn đã được đặt lại bởi Superadmin.\nVui lòng liên hệ Superadmin để nhận mật khẩu mới.\n\nTrân trọng,\nHệ thống quản lý.`;
-      await transporter.sendMail({ from: process.env.EMAIL_USER, to: admin.email, subject, text });
-    }
-
-    await logActivity(req, 'UPDATE', 'Admin', admin.username, `Reset password for admin: ${admin.username}`);
-    res.json({ message: 'Đặt lại mật khẩu thành công' });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Lỗi đặt lại mật khẩu' });
-  }
-});
-
-// Unlock admin account (SuperAdmin only)
-app.put('/api/admins/:id/unlock', protect, checkSuperAdmin, async (req, res) => {
-  try {
-    const admin = await Admin.findByIdAndUpdate(req.params.id, {
-      loginAttempts: 0,
-      lockoutCount: 0,
-      $unset: { lockUntil: 1 } // Xóa trường lockUntil
-    });
-    if (!admin) return res.status(404).json({ message: 'Không tìm thấy tài khoản' });
-
-    await logActivity(req, 'UPDATE', 'Admin', admin.username, `Unlocked account: ${admin.username}`);
-    res.json({ message: 'Mở khóa tài khoản thành công' });
-  } catch (error) {
-    res.status(500).json({ message: 'Lỗi mở khóa tài khoản' });
-  }
-});
-
-// Delete admin
-app.delete('/api/admins/:id', protect, checkSuperAdmin, async (req, res) => {
-  try {
-    if (req.params.id === req.adminId) {
-      return res.status(400).json({ message: 'Không thể tự xóa chính mình' });
-    }
-    const admin = await Admin.findByIdAndDelete(req.params.id);
-    const reason = req.body.reason || 'Không có lý do';
-    await logActivity(req, 'DELETE', admin ? admin.username : 'Admin', req.params.id, `Lý do: ${reason}`);
-    res.json({ message: 'Xóa thành công' });
-  } catch (error) {
-    res.status(500).json({ message: 'Lỗi xóa tài khoản' });
   }
 });
 
@@ -1118,6 +721,18 @@ app.get('/api/audit-logs', protect, async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
+// --- GLOBAL ERROR HANDLER ---
+app.use((err, req, res, next) => {
+  console.error('SERVER ERROR:', err.stack);
+  res.status(500).json({ message: 'Đã xảy ra lỗi server', error: err.message });
+});
+
+const server = app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+});
+
+server.on('error', (e) => {
+  if (e.code === 'EADDRINUSE') {
+    console.error(`Cổng ${PORT} đang bị chiếm dụng! Hãy tắt server cũ hoặc đổi cổng.`);
+  }
 });

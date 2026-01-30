@@ -15,26 +15,25 @@ const Courses = () => {
         const res = await fetch(`${API_BASE}/api/products`)
         if (res.ok) {
           const dbProducts = await res.json()
-          
-          // 1. Cập nhật thông tin cho các khóa học có sẵn (trong file tĩnh)
-          const mergedStatic = products.map(p => {
-            const dbP = dbProducts.find(dp => dp.id === p.id)
-            const finalP = dbP ? { ...p, ...dbP } : p
-            if (finalP.image && typeof finalP.image === 'string' && finalP.image.startsWith('/uploads/')) {
-              finalP.image = `${API_BASE}${finalP.image}`
-            }
-            return finalP
-          })
-
-          // 2. Lấy thêm các khóa học mới từ DB (không có trong file tĩnh)
-          const newFromDb = dbProducts.filter(dp => !products.find(p => p.id === dp.id)).map(dp => {
-             if (dp.image && typeof dp.image === 'string' && dp.image.startsWith('/uploads/')) {
-               return { ...dp, image: `${API_BASE}${dp.image}`, highlights: dp.highlights || [] }
-            }
-            return { ...dp, highlights: dp.highlights || [] }
-          })
-
-          setCourseList([...mergedStatic, ...newFromDb])
+          if (dbProducts.length > 0) {
+            // Nếu có dữ liệu từ DB, sử dụng dữ liệu DB làm nguồn chính
+            const processed = dbProducts.map(dp => {
+              let img = dp.image
+              if (img && img.startsWith('/uploads/')) {
+                img = `${API_BASE}${img}`
+              }
+              // Fallback nếu DB không có ảnh thì dùng ảnh mặc định từ assets (nếu khớp ID)
+              if (!img) {
+                 const staticP = products.find(p => p.id === dp.id)
+                 if (staticP) img = staticP.image
+              }
+              return { ...dp, image: img, highlights: dp.highlights || [] }
+            })
+            setCourseList(processed)
+          } else {
+            // Fallback về dữ liệu tĩnh nếu DB rỗng
+            setCourseList(products)
+          }
         }
       } catch (error) {
         console.error(error)

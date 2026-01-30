@@ -1,9 +1,28 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { assets } from '../assets/assets'
 
 const Album = () => {
   const navigate = useNavigate()
+  const [images, setImages] = useState([])
+  const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE) || 'http://localhost:5000'
+
+  useEffect(() => {
+    const fetchGallery = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/gallery`)
+        if (res.ok) {
+          const data = await res.json()
+          // Lấy 4 ảnh mới nhất
+          setImages(data.slice(0, 4).map(img => ({
+            ...img,
+            image: img.image.startsWith('/uploads/') ? `${API_BASE}${img.image}` : img.image
+          })))
+        }
+      } catch (error) { console.error(error) }
+    }
+    fetchGallery()
+  }, [API_BASE])
 
   return (
     <div className='py-16 lg:py-24 bg-[#f8f9fa]' id='thu-vien'>

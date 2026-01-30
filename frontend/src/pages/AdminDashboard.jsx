@@ -5,6 +5,7 @@ import { toast } from 'react-toastify'
 import { useNavigate } from 'react-router-dom'
 import Skeleton from '../components/Skeleton'
 import { useAuth } from '../context/AuthContext'
+import DeleteModal from '../components/DeleteModal'
 
 const AdminDashboard = () => {
   const [registrations, setRegistrations] = useState([])
@@ -24,6 +25,9 @@ const AdminDashboard = () => {
     newPassword: '',
     confirmPassword: ''
   })
+  
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deleteId, setDeleteId] = useState(null)
 
   useEffect(() => {
     const fetchRegistrations = async () => {
@@ -73,27 +77,31 @@ const AdminDashboard = () => {
     }
   }
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa học viên này không?')) {
-      const reason = window.prompt('Vui lòng nhập lý do xóa:', 'Thay đổi ý định')
-      if (reason === null) return // Người dùng ấn Hủy
+  const handleDelete = (id) => {
+    setDeleteId(id)
+    setShowDeleteModal(true)
+  }
 
-      try {
-        const response = await fetch(`${API_BASE}/api/registrations/${id}`, {
-          method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ reason })
-        })
-        if (response.ok) {
-          setRegistrations(prev => prev.filter(item => item._id !== id))
-          toast.success('Xóa thành công!')
-        } else {
-          toast.error('Xóa thất bại. Vui lòng thử lại.')
-        }
-      } catch (error) {
-        console.error('Error:', error)
-        toast.error('Có lỗi xảy ra.')
+  const confirmDelete = async () => {
+    if (!deleteId) return
+    try {
+      const response = await fetch(`${API_BASE}/api/registrations/${deleteId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: 'Admin xóa trực tiếp' })
+      })
+      if (response.ok) {
+        setRegistrations(prev => prev.filter(item => item._id !== deleteId))
+        toast.success('Xóa thành công!')
+      } else {
+        toast.error('Xóa thất bại. Vui lòng thử lại.')
       }
+    } catch (error) {
+      console.error('Error:', error)
+      toast.error('Có lỗi xảy ra.')
+    } finally {
+      setShowDeleteModal(false)
+      setDeleteId(null)
     }
   }
 
@@ -235,44 +243,52 @@ const AdminDashboard = () => {
   return (
     <div className='w-full'>
       <div className='w-full'>
-        <div className='flex flex-col md:flex-row justify-between items-center mb-8 gap-4'>
-          <h1 className='text-3xl font-bold text-gray-900'>Danh sách đăng ký học viên</h1>
-          <div className='flex items-center gap-4 w-full md:w-auto'>
-            <div className='relative flex-1 md:flex-none'>
+        <div className='flex flex-col xl:flex-row justify-between items-start xl:items-center mb-6 gap-4'>
+          <h1 className='text-2xl md:text-3xl font-bold text-gray-900'>Danh sách đăng ký</h1>
+          
+          <div className='flex flex-col md:flex-row gap-3 w-full xl:w-auto'>
+            {/* Search & Filter Group */}
+            <div className='flex gap-2 w-full md:w-auto'>
+                <div className='relative flex-1 md:w-64'>
               <input
                 type="text"
                 placeholder="Tìm tên hoặc SĐT..."
-                className="w-full md:w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
               <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[20px]">search</span>
             </div>
             <select
-              className="pl-3 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                  className="pl-3 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
             >
-              <option value="all">Tất cả trạng thái</option>
-              <option value="pending">Chưa liên hệ</option>
-              <option value="contacted">Đã liên hệ</option>
+                  <option value="all">Tất cả</option>
+                  <option value="pending">Chưa LH</option>
+                  <option value="contacted">Đã LH</option>
             </select>
-            <span className='bg-blue-100 text-blue-800 text-sm font-medium px-4 py-2 rounded-full whitespace-nowrap'>
-              Tổng số: {filteredRegistrations.length}
+            </div>
+
+            {/* Action Buttons Group */}
+            <div className='flex gap-2 overflow-x-auto pb-1 md:pb-0'>
+                <span className='bg-blue-100 text-blue-800 text-sm font-medium px-3 py-2 rounded-lg whitespace-nowrap flex items-center'>
+                  {filteredRegistrations.length} hồ sơ
             </span>
             <button 
               onClick={handleExportExcel}
-              className='bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-4 py-2 rounded-lg flex items-center gap-2 transition-colors whitespace-nowrap'>
+                  className='bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-3 py-2 rounded-lg flex items-center gap-1 transition-colors whitespace-nowrap'>
               <span className="material-symbols-outlined text-[20px]">download</span>
-              Xuất Excel
+                  Excel
             </button>
             <button 
               onClick={() => setShowPasswordModal(true)}
-              className='bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium px-4 py-2 rounded-lg flex items-center gap-2 transition-colors whitespace-nowrap'>
+                  className='bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium px-3 py-2 rounded-lg flex items-center gap-1 transition-colors whitespace-nowrap'>
               <span className="material-symbols-outlined text-[20px]">lock_reset</span>
-              Đổi mật khẩu
+                  Pass
             </button>
           </div>
+        </div>
         </div>
 
         {/* Thống kê biểu đồ */}
@@ -328,7 +344,8 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        <div className='bg-white shadow-md rounded-lg overflow-hidden border border-gray-200'>
+        {/* Desktop Table View */}
+        <div className='hidden md:block bg-white shadow-md rounded-lg overflow-hidden border border-gray-200'>
           <div className='overflow-x-auto'>
             <table className='min-w-full divide-y divide-gray-200'>
               <thead className='bg-gray-50'>
@@ -398,14 +415,14 @@ const AdminDashboard = () => {
                         </button>
                         <button 
                           onClick={() => navigate(`/admin/student/${item._id}`)}
-                          className='text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded-md transition-colors mr-2'>
-                          Chi tiết
+                          className='text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 p-2 rounded-lg transition-colors mr-2 inline-flex items-center justify-center' title="Xem chi tiết">
+                          <span className="material-symbols-outlined text-[20px]">visibility</span>
                         </button>
                         {role !== 'staff' && (
                           <button 
                             onClick={() => handleDelete(item._id)}
-                            className='text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-3 py-1 rounded-md transition-colors'>
-                            Xóa
+                            className='text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors inline-flex items-center justify-center' title="Xóa">
+                            <span className="material-symbols-outlined text-[20px]">delete</span>
                           </button>
                         )}
                       </td>
@@ -421,6 +438,82 @@ const AdminDashboard = () => {
               </tbody>
             </table>
           </div>
+        </div>
+
+        {/* Mobile Card View */}
+        <div className='md:hidden space-y-4'>
+            {currentItems.length > 0 ? (
+                currentItems.map((item) => {
+                    const isOverdue = (item.status !== 'contacted') && (new Date() - new Date(item.createdAt) > 3 * 24 * 60 * 60 * 1000)
+                    return (
+                        <div key={item._id} className={`bg-white p-4 rounded-lg shadow-sm border border-gray-200 ${isOverdue ? 'border-l-4 border-l-red-500' : ''}`}>
+                            <div className='flex justify-between items-start mb-3'>
+                                <div>
+                                    <h3 className='font-bold text-gray-900 text-lg'>{item.lastName} {item.firstName}</h3>
+                                    <a href={`tel:${item.phone}`} className='text-blue-600 font-medium text-sm flex items-center gap-1 mt-1'>
+                                        <span className="material-symbols-outlined text-[16px]">call</span> {item.phone}
+                                    </a>
+                                </div>
+                                <div className='flex flex-col items-end gap-1'>
+                                    <span className={`px-2 py-1 text-xs font-bold rounded-full 
+                                        ${item.course === 'b1' ? 'bg-green-100 text-green-800' : 
+                                        item.course === 'b2' ? 'bg-blue-100 text-blue-800' : 
+                                        item.course === 'c' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'}`}>
+                                        {item.courseName || item.course?.toUpperCase()}
+                                    </span>
+                                    <span className={`px-2 py-1 text-xs font-bold rounded-full 
+                                        ${(item.status === 'contacted') ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                                        {item.status === 'contacted' ? 'Đã LH' : 'Chờ XL'}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className='text-sm text-gray-600 space-y-2 mb-4'>
+                                <p className='flex items-center gap-2'>
+                                    <span className='material-symbols-outlined text-[16px] text-gray-400'>calendar_today</span>
+                                    {new Date(item.createdAt).toLocaleDateString('vi-VN')}
+                                    {isOverdue && <span className="text-red-500 text-xs font-bold ml-1">(Quá hạn)</span>}
+                                </p>
+                                {item.address && (
+                                    <p className='flex items-start gap-2'>
+                                        <span className='material-symbols-outlined text-[16px] text-gray-400 mt-0.5'>location_on</span>
+                                        <span className='line-clamp-1'>{item.address}</span>
+                                    </p>
+                                )}
+                                {item.note && (
+                                    <div className='bg-gray-50 p-2 rounded text-gray-500 italic text-xs'>
+                                        "{item.note}"
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className='flex gap-2 pt-3 border-t border-gray-100'>
+                                <button 
+                                    onClick={() => handleStatusChange(item._id, item.status || 'pending')}
+                                    className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors border ${item.status === 'contacted' ? 'text-gray-600 border-gray-300 bg-white hover:bg-gray-50' : 'text-white bg-blue-600 hover:bg-blue-700 border-transparent'}`}>
+                                    {item.status === 'contacted' ? 'Hoàn tác' : 'Xác nhận LH'}
+                                </button>
+                                <button 
+                                    onClick={() => navigate(`/admin/student/${item._id}`)}
+                                    className='px-3 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg text-sm font-medium border border-blue-100'>
+                                    <span className="material-symbols-outlined text-[20px]">visibility</span>
+                                </button>
+                                {role !== 'staff' && (
+                                    <button 
+                                        onClick={() => handleDelete(item._id)}
+                                        className='px-3 py-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg text-sm font-medium border border-red-100'>
+                                        <span className="material-symbols-outlined text-[20px]">delete</span>
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    )
+                })
+            ) : (
+                <div className='text-center py-8 text-gray-500 bg-white rounded-lg border border-gray-200'>
+                    Không tìm thấy kết quả.
+                </div>
+            )}
         </div>
 
         {/* Pagination Controls */}
@@ -499,6 +592,15 @@ const AdminDashboard = () => {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <DeleteModal 
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={confirmDelete}
+        title="Xóa hồ sơ học viên"
+        message={<>Bạn có chắc chắn muốn xóa hồ sơ này không? <br/>Hành động này không thể hoàn tác.</>}
+      />
     </div>
   )
 }

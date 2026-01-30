@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { assets } from '../assets/assets.js'
 import SmartNavLink from './SmartNavLink'
 import SmartLink from './SmartLink'
@@ -10,6 +10,14 @@ const Navbar = () => {
   const { isAdmin, logout, user } = useAuth()
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE) || 'http://localhost:5000'
+  const [hotline, setHotline] = useState('1900 1000')
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/settings`)
+      .then(res => res.json())
+      .then(data => { if(data.hotline) setHotline(data.hotline) })
+      .catch(err => console.error(err))
+  }, [API_BASE])
 
   return (
     <div className="sticky top-0 z-50 bg-white py-5 font-medium shadow-sm">
@@ -60,13 +68,13 @@ const Navbar = () => {
         <div className="flex items-center gap-4">
           <a
             className="hidden md:flex flex-col items-end mr-2"
-            href="tel:19001000"
+            href={`tel:${hotline.replace(/\s/g, '')}`}
           >
             <span className="text-xs text-gray-500 font-medium">
               Hotline tư vấn
             </span>
             <span className="text-yellow-500 font-bold text-base">
-              1900 1000
+              {hotline}
             </span>
           </a>
 

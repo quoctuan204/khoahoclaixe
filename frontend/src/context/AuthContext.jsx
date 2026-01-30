@@ -1,20 +1,26 @@
-import React, { createContext, useContext, useState, useEffect } from 'react'
+import React, { createContext, useContext, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE) || 'http://localhost:5000'
+const API_BASE =
+  import.meta?.env?.VITE_API_BASE || 'http://localhost:5000'
 
-const AuthContext = createContext()
+const AuthContext = createContext(null)
 
 export const useAuth = () => useContext(AuthContext)
 
 export const AuthProvider = ({ children }) => {
+  const navigate = useNavigate()
+
+  const [token, setToken] = useState(
+    localStorage.getItem('token') ||
+      sessionStorage.getItem('token') ||
+      null
+  )
   const [user, setUser] = useState(null)
-  const [token, setToken] = useState(localStorage.getItem('token') || sessionStorage.getItem('token') || null)
   const [role, setRole] = useState(null)
   const [loading, setLoading] = useState(true)
-  const navigate = useNavigate()
-  
 
+  /*VERIFY TOKEN*/
   useEffect(() => {
     const verifyToken = async () => {
       if (!token) {
@@ -24,18 +30,17 @@ export const AuthProvider = ({ children }) => {
 
       try {
         const res = await fetch(`${API_BASE}/api/me`, {
-          headers: { 'Authorization': `Bearer ${token}` }
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
         })
 
-        if (res.ok) {
-          const data = await res.json()
-          setUser(data)
-          setRole(data.role)
-        } else {
-          logout()
-        }
-      } catch (error) {
-        console.error('Auth verification failed', error)
+        if (!res.ok) throw new Error('Unauthorized')
+
+        const data = await res.json()
+        setUser(data)
+        setRole(data.role)
+      } catch (err) {
         logout()
       } finally {
         setLoading(false)
@@ -43,40 +48,47 @@ export const AuthProvider = ({ children }) => {
     }
 
     verifyToken()
-  }, [])
+  }, [token])
 
-  const login = (newToken, newRole, username, remember = false) => {
+  /* LOGIN */
+  const login = ({ token, user, remember }) => {
     if (remember) {
-      localStorage.setItem('token', newToken)
+      localStorage.setItem('token', token)
       sessionStorage.removeItem('token')
     } else {
-      sessionStorage.setItem('token', newToken)
+      sessionStorage.setItem('token', token)
       localStorage.removeItem('token')
     }
-    setToken(newToken)
-    setRole(newRole)
-    setUser({ username })
+
+    setToken(token)
+    setUser(user)
+    setRole(user?.role)
+
     navigate('/admin')
   }
 
+  /* LOGOUT */
   const logout = () => {
     localStorage.removeItem('token')
     sessionStorage.removeItem('token')
+
     setToken(null)
     setUser(null)
     setRole(null)
+
     navigate('/login')
   }
 
-  const updateUser = (userData) => {
-    setUser(prev => ({ ...prev, ...userData }))
+  const updateUser = (data) => {
+    setUser((prev) => ({ ...prev, ...data }))
   }
 
   const value = {
     user,
-    token,
     role,
-    isAdmin: !!user,
+    token,
+    isAuthenticated: !!token,
+    isAdmin: ['admin', 'superadmin', 'staff', 'ADMIN'].includes(role),
     loading,
     login,
     logout,

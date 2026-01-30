@@ -62,8 +62,17 @@ const AdminProfile = () => {
     }
   }
 
+  const isValidEmail = (email) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
+    
+    if (profile.email && !isValidEmail(profile.email)) {
+      return toast.error('Địa chỉ email không đúng định dạng.')
+    }
+
     setSaving(true)
     try {
       let avatarUrl = profile.avatar.replace(API_BASE, '')
@@ -181,6 +190,7 @@ const AdminProfile = () => {
             className='w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none'
             placeholder='Nhập địa chỉ email'
           />
+          <p className='text-xs text-gray-500 mt-1'>* Email này sẽ được dùng để lấy lại mật khẩu khi bạn quên.</p>
         </div>
 
         <div className='flex justify-end'>

@@ -11,6 +11,7 @@ const RegisterForTheCourse = () => {
   const [selectedCourseName, setSelectedCourseName] = useState('')
   const [imageSrc, setImageSrc] = useState(assets.b1sotudong)
   const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE) || 'http://localhost:5000'
+  const [products, setProducts] = useState([])
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -21,6 +22,23 @@ const RegisterForTheCourse = () => {
     address: '',
     note: ''
   })
+  const [loading, setLoading] = useState(false)
+
+  // Fetch danh sách khóa học từ API
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/products`)
+        if (res.ok) {
+          const data = await res.json()
+          setProducts(data.filter(p => p.isVisible !== false)) // Chỉ lấy khóa học được hiển thị
+        }
+      } catch (error) {
+        console.error('Failed to fetch products', error)
+      }
+    }
+    fetchProducts()
+  }, [API_BASE])
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -29,6 +47,7 @@ const RegisterForTheCourse = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setLoading(true)
     const dataToSend = { ...formData, course: selectedCourse, courseName: selectedCourseName }
     try {
       const response = await fetch(`${API_BASE}/api/register-course`, {
@@ -57,50 +76,61 @@ const RegisterForTheCourse = () => {
     } catch (error) {
       console.error('Error:', error)
       toast.error('Có lỗi xảy ra. Vui lòng thử lại.')
+    } finally {
+      setLoading(false)
     }
   }
 
-  const normalizeCourseKey = (c) => {
-    if (!c) return ''
-    if (typeof c === 'string'){
-      if (c.startsWith('b1')) return 'b1'
-      if (c.startsWith('b2')) return 'b2'
-      if (c.startsWith('c')) return 'c'
+  // Helper lấy thông tin khóa học từ danh sách đã fetch
+  const getProductInfo = (courseId) => {
+    const product = products.find(p => p.id === courseId)
+    if (!product) return null
+    
+    let img = product.image
+    if (img && img.startsWith('/uploads/')) {
+      img = `${API_BASE}${img}`
     }
-    return ''
+    // Fallback ảnh mặc định nếu DB chưa có ảnh
+    if (!img) {
+        if (courseId === 'b1') img = assets.b1sotudong
+        else if (courseId === 'b2') img = assets.toyotavios
+        else if (courseId === 'c') img = assets.c1xetai
+        else img = assets.b1sotudong
+    }
+
+    return {
+      name: product.title,
+      image: img
+    }
   }
 
   useEffect(() => {
+    if (products.length === 0) return
+
     const s = location.state || {}
     if (s.course) {
-      const key = normalizeCourseKey(s.course)
-      setSelectedCourse(key)
-      setSelectedCourseName(s.courseName || mapCourseToName(key))
-      setImageSrc(s.imageKey || mapCourseToImage(key))
-      setFormData(prev => ({ ...prev, course: key }))
+      // Tìm khóa học tương ứng trong danh sách products
+      // Logic này hỗ trợ cả ID chính xác hoặc ID cũ (b1, b2...)
+      let key = s.course
+      let info = getProductInfo(key)
+      
+      if (info) {
+        setSelectedCourse(key)
+        setSelectedCourseName(info.name)
+        setImageSrc(info.image)
+        setFormData(prev => ({ ...prev, course: key }))
+      }
     }
-  }, [location.state])
-
-  const mapCourseToName = (c) => {
-    if (c === 'b1') return 'Hạng B1 - Số tự động'
-    if (c === 'b2') return 'Hạng B2 - Số sàn'
-    if (c === 'c') return 'Hạng C - Xe tải'
-    if (typeof c === 'string') return c
-    return ''
-  }
-
-  const mapCourseToImage = (c) => {
-    if (c === 'b1') return assets.b1sotudong
-    if (c === 'b2') return assets.toyotavios
-    if (c === 'c') return assets.c1xetai
-    return assets.b1sotudong
-  }
+  }, [location.state, products])
 
   const handleCourseChange = (e) => {
     const v = e.target.value
     setSelectedCourse(v)
-    setSelectedCourseName(mapCourseToName(v))
-    setImageSrc(mapCourseToImage(v))
+    const info = getProductInfo(v)
+    if (info) {
+      setSelectedCourseName(info.name)
+      setImageSrc(info.image)
+    }
     setFormData(prev => ({ ...prev, course: v }))
   }
 
@@ -263,9 +293,9 @@ const RegisterForTheCourse = () => {
                                     className='w-full appearance-none rounded-lg border-[#dbdfe6] dark:border-[#2a3441] bg-white dark:bg-[#101622]/50 text-[#111318] dark:text-white shadow-sm focus:border-[#135bec] focus:ring-[#135bec] h-14 px-4 pr-10' 
                                     id="course" value={selectedCourse} onChange={handleCourseChange}>
                                         <option disabled value="">Vui lòng chọn khóa học...</option>
-                                        <option value="b1">Hạng B1 - Số tự động (Khuyên dùng cho gia đình)</option>
-                                        <option value="b2">Hạng B2 - Số sàn (Chuyên nghiệp)</option>
-                                        <option value="c">Hạng C - Xe tải (Trên 3.5 tấn)</option>   
+                                        {products.map(p => (
+                                            <option key={p.id} value={p.id}>{p.title} {p.price ? `(${p.price})` : ''}</option>
+                                        ))}
                                 </select>
                                 <div className='absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-[#616f89]'>
                                     <span className='material-symbols-outlined text-[24px]'>
@@ -326,13 +356,13 @@ const RegisterForTheCourse = () => {
                         <div className='pt-4'>
                             {!isAdmin ? (
                                 <>
-                                    <button className='group relative flex w-full justify-center rounded-lg border border-transparent bg-[#135bec] py-4 px-4 text-base font-bold text-white hover:bg-[#0f4bc4] focus:outline-none focus:ring-2 focus:ring-[#135bec] focus:ring-offset-2 transition-all shadow-lg shadow-[#135bec]/30' type="submit">
+                                    <button disabled={loading} className={`group relative flex w-full justify-center rounded-lg border border-transparent bg-[#135bec] py-4 px-4 text-base font-bold text-white hover:bg-[#0f4bc4] focus:outline-none focus:ring-2 focus:ring-[#135bec] focus:ring-offset-2 transition-all shadow-lg shadow-[#135bec]/30 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`} type="submit">
                                         <span className='absolute inset-y-0 left-0 flex items-center pl-3'>
-                                            <span className='material-symbols-outlined group-hover:animate-pulse'>
+                                            {!loading && <span className='material-symbols-outlined group-hover:animate-pulse'>
                                                 how_to_reg
-                                            </span>
+                                            </span>}
                                         </span>
-                                        Đăng ký ngay
+                                        {loading ? 'Đang xử lý...' : 'Đăng ký ngay'}
                                     </button>
                                     <p className='mt-4 text-center text-xs text-[#616f89] dark:text-gray-400'>
                                         Bằng việc nhấp vào nút Đăng ký, bạn đồng ý với <a className='text-[#135bec] hover:underline' href="#">Điều khoản dịch vụ</a> và <a className='text-[#135bec] hover:underline' href="#">Chính sách bảo mật</a> của chúng tôi.
