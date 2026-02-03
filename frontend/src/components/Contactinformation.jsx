@@ -60,8 +60,8 @@ const Contactinformation = () => {
     }
   }
 
-  const address = settings.address || "SÂN TẬP LÁI XE CẦN ĐƯỚC, GJP2+X7X, Mỹ Lệ, Cần Đước, Long An, Việt Nam";
-  const encodedAddress = encodeURIComponent(address);
+  // const address = settings.address || "SÂN TẬP LÁI XE CẦN ĐƯỚC, GJP2+X7X, Mỹ Lệ, Cần Đước, Long An, Việt Nam";
+  // const encodedAddress = encodeURIComponent(address);
 
   return (
     <div className='flex-1 w-full bg-background-light dark:bg-background-dark py-10 lg:py-16'>
@@ -114,12 +114,12 @@ const Contactinformation = () => {
             <div className='rounded-xl overflow-hidden border border-[#dbdfe6] dark:border-gray-700 shadow-sm h-64 lg:h-auto lg:flex-1 min-h-[250px] relative group'>
               <iframe
                 className='w-full h-full object-cover transition-all duration-500'
-                src={`https://www.google.com/maps?q=${encodedAddress}&output=embed`}
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1007.1649007809158!2d106.6004964805621!3d10.537466154418244!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31753537aa132061%3A0x476a4f3efb01c894!2zU8OCTiBU4bqsUCBMw4FJIFhFIEPhuqZOIMSQxq_hu5pD!5e1!3m2!1svi!2s!4v1770107565312!5m2!1svi!2s"
                 loading='lazy'
                 referrerPolicy='no-referrer-when-downgrade'
               />
               <a
-                href={`https://www.google.com/maps/search/?api=1&query=${encodedAddress}`}
+                href="https://www.google.com/maps/place/S%C3%82N+T%E1%BA%ACP+L%C3%81I+XE+C%E1%BA%A6N+%C4%90%C6%AF%E1%BB%9AC/@10.5374662,106.6004965,18z/data=!4m6!3m5!1s0x31753537aa132061:0x476a4f3efb01c894!8m2!3d10.5374662!4d106.6004965!16s%2Fg%2F11h0_0_0_0"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors flex items-center justify-center"

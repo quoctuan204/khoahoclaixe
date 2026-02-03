@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { assets } from '../assets/assets'
+import FadeIn from '../components/FadeIn'
 
 const API_BASE =
   import.meta?.env?.VITE_API_BASE || 'http://localhost:5000'
@@ -9,6 +11,7 @@ const Login = () => {
 
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [remember, setRemember] = useState(false)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
@@ -127,7 +130,10 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full bg-white p-8 rounded-xl shadow-lg">
+      <FadeIn className="max-w-md w-full bg-white p-8 rounded-xl shadow-lg">
+        <div className="flex justify-center mb-6">
+          <img src={assets.logo} alt="Logo" className="h-20 w-auto object-contain" />
+        </div>
         <h2 className="text-center text-3xl font-bold mb-6">
           {mode === 'LOGIN' ? 'Đăng nhập quản trị' : mode === 'FORGOT' ? 'Quên mật khẩu' : 'Đặt lại mật khẩu'}
         </h2>
@@ -144,14 +150,25 @@ const Login = () => {
               className="w-full h-12 px-3 border rounded"
             />
 
-            <input
-              type="password"
-              placeholder="Mật khẩu"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full h-12 px-3 border rounded"
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Mật khẩu"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="w-full h-12 px-3 border rounded pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <span className="material-symbols-outlined text-[20px]">
+                  {showPassword ? 'visibility' : 'visibility_off'}
+                </span>
+              </button>
+            </div>
 
               <div className="flex items-center justify-between text-sm">
                 <label className="flex items-center gap-2">
@@ -246,7 +263,7 @@ const Login = () => {
             </button>
           </form>
         )}
-      </div>
+      </FadeIn>
     </div>
   )
 }

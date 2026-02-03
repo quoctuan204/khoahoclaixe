@@ -170,6 +170,14 @@ const AdminDashboard = () => {
     return new Date(a.createdAt) - new Date(b.createdAt)
   })
 
+  const formatAddress = (addr) => {
+    if (!addr) return ''
+    if (typeof addr === 'object') {
+      return [addr.ward, addr.district, addr.province].filter(Boolean).join(', ')
+    }
+    return addr
+  }
+
   const handleExportExcel = () => {
     const dataToExport = filteredRegistrations.map((item, index) => ({
       'STT': index + 1,
@@ -180,7 +188,7 @@ const AdminDashboard = () => {
       'Khóa học': item.courseName || item.course?.toUpperCase() || '',
       'Trạng thái': item.status === 'contacted' ? 'Đã liên hệ' : 'Chưa liên hệ',
       'CCCD': item.cccd || '',
-      'Địa chỉ': item.address || '',
+      'Địa chỉ': formatAddress(item.address),
       'Ghi chú': item.note || ''
     }))
 
@@ -401,8 +409,8 @@ const AdminDashboard = () => {
                       <td className='px-3 py-3 whitespace-nowrap text-sm text-gray-500'>
                         {item.cccd || '-'}
                       </td>
-                      <td className='px-3 py-3 text-sm text-gray-500 max-w-xs truncate' title={item.address}>
-                        {item.address || '-'}
+                      <td className='px-3 py-3 text-sm text-gray-500 max-w-xs truncate' title={formatAddress(item.address)}>
+                        {formatAddress(item.address) || '-'}
                       </td>
                       <td className='px-3 py-3 text-sm text-gray-500 max-w-xs truncate' title={item.note}>
                         {item.note || '-'}
@@ -477,7 +485,7 @@ const AdminDashboard = () => {
                                 {item.address && (
                                     <p className='flex items-start gap-2'>
                                         <span className='material-symbols-outlined text-[16px] text-gray-400 mt-0.5'>location_on</span>
-                                        <span className='line-clamp-1'>{item.address}</span>
+                                        <span className='line-clamp-1'>{formatAddress(item.address)}</span>
                                     </p>
                                 )}
                                 {item.note && (

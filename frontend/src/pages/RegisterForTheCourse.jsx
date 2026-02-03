@@ -4,6 +4,22 @@ import { assets } from '../assets/assets'
 import { toast } from 'react-toastify'
 import { useAuth } from '../context/AuthContext'
 
+// const provinceCodes = {
+//   "001": "Hà Nội", "002": "Hà Giang", "004": "Cao Bằng", "006": "Bắc Kạn", "008": "Tuyên Quang",
+//   "010": "Lào Cai", "011": "Điện Biên", "012": "Lai Châu", "014": "Sơn La", "015": "Yên Bái",
+//   "017": "Hòa Bình", "019": "Thái Nguyên", "020": "Lạng Sơn", "022": "Quảng Ninh", "024": "Bắc Giang",
+//   "025": "Phú Thọ", "026": "Vĩnh Phúc", "027": "Bắc Ninh", "030": "Hải Dương", "031": "Hải Phòng",
+//   "033": "Hưng Yên", "034": "Thái Bình", "035": "Hà Nam", "036": "Nam Định", "037": "Ninh Bình",
+//   "038": "Thanh Hóa", "040": "Nghệ An", "042": "Hà Tĩnh", "044": "Quảng Bình", "045": "Quảng Trị",
+//   "046": "Thừa Thiên Huế", "048": "Đà Nẵng", "049": "Quảng Nam", "051": "Quảng Ngãi", "052": "Bình Định",
+//   "054": "Phú Yên", "056": "Khánh Hòa", "058": "Ninh Thuận", "060": "Bình Thuận", "062": "Kon Tum",
+//   "064": "Gia Lai", "066": "Đắk Lắk", "067": "Đắk Nông", "068": "Lâm Đồng", "070": "Bình Phước",
+//   "072": "Tây Ninh", "074": "Bình Dương", "075": "Đồng Nai", "077": "Bà Rịa - Vũng Tàu", "079": "Hồ Chí Minh",
+//   "080": "Long An", "082": "Tiền Giang", "083": "Bến Tre", "084": "Trà Vinh", "086": "Vĩnh Long",
+//   "087": "Đồng Tháp", "089": "An Giang", "091": "Kiên Giang", "092": "Cần Thơ", "093": "Hậu Giang",
+//   "094": "Sóc Trăng", "095": "Bạc Liêu", "096": "Cà Mau"
+// }
+
 const RegisterForTheCourse = () => {
   const location = useLocation()
   const { isAdmin } = useAuth()
@@ -23,6 +39,69 @@ const RegisterForTheCourse = () => {
     note: ''
   })
   const [loading, setLoading] = useState(false)
+  const [provinces, setProvinces] = useState([])
+  const [districts, setDistricts] = useState([])
+  const [wards, setWards] = useState([])
+  const [selectedProvince, setSelectedProvince] = useState('')
+  const [selectedDistrict, setSelectedDistrict] = useState('')
+  const [selectedWard, setSelectedWard] = useState('')
+
+  useEffect(() => {
+    fetch('https://esgoo.net/api-tinhthanh/1/0.htm')
+      .then(response => response.json())
+      .then(data => {
+        if (data.error === 0) setProvinces(data.data)
+      })
+      .catch(error => console.error('Error fetching provinces:', error))
+  }, [])
+
+  useEffect(() => {
+    if (selectedProvince) {
+      fetch(`https://esgoo.net/api-tinhthanh/2/${selectedProvince}.htm`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.error === 0) {
+            setDistricts(data.data)
+            setWards([])
+            setSelectedDistrict('')
+            setSelectedWard('')
+          }
+        })
+        .catch(error => console.error('Error fetching districts:', error))
+    } else {
+      setDistricts([])
+      setWards([])
+      setSelectedDistrict('')
+      setSelectedWard('')
+    }
+  }, [selectedProvince])
+
+  useEffect(() => {
+    if (selectedDistrict) {
+      fetch(`https://esgoo.net/api-tinhthanh/3/${selectedDistrict}.htm`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.error === 0) {
+            setWards(data.data)
+            setSelectedWard('')
+          }
+        })
+        .catch(error => console.error('Error fetching wards:', error))
+    } else {
+      setWards([])
+      setSelectedWard('')
+    }
+  }, [selectedDistrict])
+
+  useEffect(() => {
+    const p = provinces.find(item => item.id === selectedProvince)?.full_name || ''
+    const d = districts.find(item => item.id === selectedDistrict)?.full_name || ''
+    const w = wards.find(item => item.id === selectedWard)?.full_name || ''
+    
+    if (p) {
+      setFormData(prev => ({ ...prev, address: { province: p, district: d, ward: w } }))
+    }
+  }, [selectedProvince, selectedDistrict, selectedWard, provinces, districts, wards])
 
   // Fetch danh sách khóa học từ API
   useEffect(() => {
@@ -42,11 +121,32 @@ const RegisterForTheCourse = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
+
+    // if (name === 'cccd' && value.length >= 3) {
+    //   const code = value.substring(0, 3)
+    //   const province = provinceCodes[code]
+    //   if (province) {
+    //     setFormData(prev => {
+    //       if (!prev.address || !prev.address.includes(province)) {
+    //         return { ...prev, [name]: value, address: province }
+    //       }
+    //       return { ...prev, [name]: value }
+    //     })
+    //     return
+    //   }
+    // }
+
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+
+    if (!selectedProvince || !selectedDistrict || !selectedWard) {
+      toast.error('Vui lòng chọn đầy đủ Tỉnh/Thành phố, Quận/Huyện và Phường/Xã.')
+      return
+    }
+
     setLoading(true)
     const dataToSend = { ...formData, course: selectedCourse, courseName: selectedCourseName }
     try {
@@ -69,6 +169,9 @@ const RegisterForTheCourse = () => {
           address: '',
           note: ''
         })
+        setSelectedProvince('')
+        setSelectedDistrict('')
+        setSelectedWard('')
       } else {
         const errorData = await response.json();
         toast.error(errorData.message || 'Có lỗi xảy ra. Vui lòng thử lại.')
@@ -294,7 +397,7 @@ const RegisterForTheCourse = () => {
                                     id="course" value={selectedCourse} onChange={handleCourseChange}>
                                         <option disabled value="">Vui lòng chọn khóa học...</option>
                                         {products.map(p => (
-                                            <option key={p.id} value={p.id}>{p.title} {p.price ? `(${p.price})` : ''}</option>
+                                            <option key={p.id} value={p.id}>{p.title}</option>
                                         ))}
                                 </select>
                                 <div className='absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-[#616f89]'>
@@ -325,14 +428,49 @@ const RegisterForTheCourse = () => {
                                 <label className='block text-sm font-medium text-[#111318] dark:text-gray-200' for='cccd'>
                                     Địa chỉ thường trú
                                 </label>
-                                <input
-                                    className='w-full rounded-lg border-[#dbdfe6] dark:border-[#2a3441] bg-white dark:bg-[#101622]/50 text-[#111318] dark:text-white shadow-sm focus:border-[#135bec] focus:ring-[#135bec] h-12 px-4 placeholder:text-[#616f89]/60'
-                                    id='address'
-                                    placeholder='Quận/Huyện, Tỉnh/Thành phố'
-                                    type="text"
-                                    name='address'
-                                    value={formData.address}
-                                    onChange={handleInputChange}/>
+                                <div className='grid grid-cols-1 sm:grid-cols-3 gap-4'>
+                                    <div className='relative'>
+                                        <select
+                                            className='w-full appearance-none rounded-lg border-[#dbdfe6] dark:border-[#2a3441] bg-white dark:bg-[#101622]/50 text-[#111318] dark:text-white shadow-sm focus:border-[#135bec] focus:ring-[#135bec] h-12 px-4 pr-8'
+                                            value={selectedProvince}
+                                            onChange={(e) => setSelectedProvince(e.target.value)}
+                                        >
+                                            <option value="">Tỉnh/Thành phố</option>
+                                            {provinces.map(p => (
+                                                <option key={p.id} value={p.id}>{p.full_name}</option>
+                                            ))}
+                                        </select>
+                                        <div className='absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-[#616f89]'><span className='material-symbols-outlined text-[20px]'>expand_more</span></div>
+                                    </div>
+                                    <div className='relative'>
+                                        <select
+                                            className='w-full appearance-none rounded-lg border-[#dbdfe6] dark:border-[#2a3441] bg-white dark:bg-[#101622]/50 text-[#111318] dark:text-white shadow-sm focus:border-[#135bec] focus:ring-[#135bec] h-12 px-4 pr-8'
+                                            value={selectedDistrict}
+                                            onChange={(e) => setSelectedDistrict(e.target.value)}
+                                            disabled={!selectedProvince}
+                                        >
+                                            <option value="">Quận/Huyện</option>
+                                            {districts.map(d => (
+                                                <option key={d.id} value={d.id}>{d.full_name}</option>
+                                            ))}
+                                        </select>
+                                        <div className='absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-[#616f89]'><span className='material-symbols-outlined text-[20px]'>expand_more</span></div>
+                                    </div>
+                                    <div className='relative'>
+                                        <select
+                                            className='w-full appearance-none rounded-lg border-[#dbdfe6] dark:border-[#2a3441] bg-white dark:bg-[#101622]/50 text-[#111318] dark:text-white shadow-sm focus:border-[#135bec] focus:ring-[#135bec] h-12 px-4 pr-8'
+                                            value={selectedWard}
+                                            onChange={(e) => setSelectedWard(e.target.value)}
+                                            disabled={!selectedDistrict}
+                                        >
+                                            <option value="">Phường/Xã</option>
+                                            {wards.map(w => (
+                                                <option key={w.id} value={w.id}>{w.full_name}</option>
+                                            ))}
+                                        </select>
+                                        <div className='absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-[#616f89]'><span className='material-symbols-outlined text-[20px]'>expand_more</span></div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 

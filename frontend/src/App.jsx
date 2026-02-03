@@ -134,7 +134,6 @@ const AppRoutes = () => {
               <Route path='/lien_he' element={<Contact />} />
               <Route path='/dangkykhoahoc' element={<RegisterForTheCourse />} />
               <Route path='/product/:productId' element={<Product />} />
-              <Route path='/login' element={<Login />} />
               <Route path='/hethongxetaplai' element={<DrivingPracticeCar />} />
               <Route path='/tiledau' element={<PassRate />} />
               <Route path='/chinhsachhocphi' element={<TuitionPolicy />} />
@@ -145,6 +144,9 @@ const AppRoutes = () => {
               {/* Catch-all Route for 404 */}
               <Route path='*' element={<NotFound />} />
             </Route>
+
+            {/* Standalone Routes */}
+            <Route path='/login' element={<Login />} />
           </Routes>
         </div>
   )

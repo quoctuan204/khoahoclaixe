@@ -38,6 +38,14 @@ const StudentDetail = () => {
     fetchStudent()
   }, [id, navigate, API_BASE])
 
+  const formatAddress = (addr) => {
+    if (!addr) return ''
+    if (typeof addr === 'object') {
+      return [addr.ward, addr.district, addr.province].filter(Boolean).join(', ')
+    }
+    return addr
+  }
+
   if (loading) return <div className="p-10 text-center text-gray-500">Đang tải dữ liệu...</div>
 
   return (
@@ -77,7 +85,7 @@ const StudentDetail = () => {
           </div>
           <div className='md:col-span-2 space-y-2'>
             <label className='block text-sm font-medium text-gray-700'>Địa chỉ</label>
-            <input className='w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-100 text-gray-600 cursor-not-allowed' value={formData.address || ''} readOnly />
+            <input className='w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-100 text-gray-600 cursor-not-allowed' value={formatAddress(formData.address)} readOnly />
           </div>
           <div className='md:col-span-2 space-y-2'>
             <label className='block text-sm font-medium text-gray-700'>Ghi chú</label>
