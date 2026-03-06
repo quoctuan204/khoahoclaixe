@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const adminSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  role: { type: String, default: 'admin', enum: ['admin', 'staff', 'superadmin'] },
+  role: { type: String, default: 'admin', enum: ['admin', 'staff', 'superadmin', 'editor', 'sale'] },
   fullName: String,
   email: String,
   avatar: String, // URL to avatar image

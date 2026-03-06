@@ -65,7 +65,7 @@ const Settings = () => {
 
   useEffect(() => {
     if (activeTab === 'admins' && role === 'superadmin') {
-      const fetchAdmins = async () => {
+      const fetchData = async () => {
         setAdminLoading(true)
         try {
           const res = await fetch(`${API_BASE}/api/admins`, {
@@ -73,7 +73,7 @@ const Settings = () => {
           })
           if (res.ok) {
             const data = await res.json()
-            if (Array.isArray(data)) setAdmins(data)
+            if (Array.isArray(data)) setAdmins(data);
           }
         } catch (error) {
           console.error(error)
@@ -81,7 +81,7 @@ const Settings = () => {
           setAdminLoading(false)
         }
       }
-      fetchAdmins()
+      fetchData()
     }
   }, [activeTab, role, token, API_BASE])
 
@@ -339,6 +339,7 @@ const Settings = () => {
               <select className='border p-2 rounded' value={newAdmin.role} onChange={e => setNewAdmin({...newAdmin, role: e.target.value})}>
                 <option value="admin">Admin</option>
                 <option value="staff">Nhân viên</option>
+                <option value="sale">Sale</option>
                 <option value="superadmin">Super Admin</option>
               </select>
               <button type='submit' className='bg-green-600 text-white p-2 rounded hover:bg-green-700'>Thêm mới</button>
@@ -417,6 +418,7 @@ const Settings = () => {
                 <select className='w-full border p-2 rounded' value={editForm.role} onChange={e => setEditForm({...editForm, role: e.target.value})}>
                   <option value="admin">Admin</option>
                   <option value="staff">Nhân viên</option>
+                  <option value="sale">Sale</option>
                   <option value="superadmin">Super Admin</option>
                 </select>
               </div>

@@ -1,8 +1,18 @@
 @import "tailwindcss";
 
+:root {
+  --tw-dark-mode: false;
+  color-scheme: light;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+body {
+  background-color: #ffffff;
+  color: #000000;
+}
 
 a.active hr {
     display: block;

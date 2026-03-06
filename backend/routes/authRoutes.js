@@ -52,7 +52,8 @@ router.post('/login', loginLimiter, async (req, res) => {
         await admin.save();
 
         const token = jwt.sign({ id: admin._id, role: admin.role }, process.env.JWT_SECRET || 'secret', { expiresIn: '1d' });
-        return res.json({ token, role: admin.role, username: admin.username });
+        const user = await Admin.findById(admin._id).select('-password');
+        return res.json({ token, user });
       } else {
         admin.loginAttempts = (admin.loginAttempts || 0) + 1;
         if (admin.loginAttempts >= 5) {
@@ -81,7 +82,9 @@ router.post('/verify-2fa', loginLimiter, async (req, res) => {
     await admin.save();
 
     const token = jwt.sign({ id: admin._id, role: admin.role }, process.env.JWT_SECRET || 'secret', { expiresIn: '1d' });
-    res.json({ token, role: admin.role, username: admin.username });
+    const user = await Admin.findById(admin._id).select('-password');
+    res.json({ token, user });
+
   } catch (error) {
     console.error('2FA Verify Error:', error);
     res.status(500).json({ message: 'Lỗi xác thực' });
@@ -100,7 +103,7 @@ router.get('/me', async (req, res) => {
     console.log('[DEBUG] Đang verify token...');
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
     console.log('[DEBUG] Token OK. ID:', decoded.id, '- Đang tìm trong DB...');
-
+    
     const admin = await Admin.findById(decoded.id).select('-password');
     console.log('[DEBUG] Kết quả DB:', admin ? 'Tìm thấy' : 'Không tìm thấy');
 
