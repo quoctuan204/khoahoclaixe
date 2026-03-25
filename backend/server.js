@@ -19,6 +19,7 @@ const authRoutes = require('./routes/authRoutes');
 const contentRoutes = require('./routes/contentRoutes');
 const customerRoutes = require('./routes/customerRoutes');
 const systemRoutes = require('./routes/systemRoutes');
+const chatRoutes = require('./routes/chatRoutes');
 
 // 1. SECURITY: Helmet (Bảo mật Headers)
 app.use(helmet({
@@ -100,6 +101,38 @@ app.post('/api/upload', protect, (req, res) => {
   });
 });
 
+// --- UPLOAD TÀI LIỆU (PDF, DOCX) ---
+const docStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, 'uploads/'),
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'form-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+const docFileFilter = (req, file, cb) => {
+  const filetypes = /pdf|doc|docx/;
+  if (filetypes.test(path.extname(file.originalname).toLowerCase())) return cb(null, true);
+  cb(new Error('Chỉ cho phép file tài liệu (pdf, doc, docx)!'), false);
+};
+const uploadDoc = multer({ storage: docStorage, fileFilter: docFileFilter, limits: { fileSize: 10 * 1024 * 1024 } }); // Tối đa 10MB
+
+app.post('/api/upload-doc', protect, (req, res) => {
+  uploadDoc.single('file')(req, res, (err) => {
+    if (err) return res.status(400).json({ message: err.message || 'Lỗi upload file' });
+    if (!req.file) return res.status(400).json({ message: 'Chưa chọn file' });
+    res.json({ fileUrl: `/uploads/${req.file.filename}`, fileName: req.file.originalname });
+  });
+});
+
+// --- API QUẢN LÝ BIỂU MẪU ---
+const FormDocSchema = new mongoose.Schema({ form1Url: String, form1Name: String, form2Url: String, form2Name: String });
+const FormDoc = mongoose.models.FormDoc || mongoose.model('FormDoc', FormDocSchema);
+
+app.get('/api/forms', async (req, res) => res.json((await FormDoc.findOne()) || {}));
+app.post('/api/forms', protect, async (req, res) => {
+  res.json(await FormDoc.findOneAndUpdate({}, req.body, { upsert: true, new: true }));
+});
+
 // Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI).then(() => console.log('MongoDB connected successfully'))
   .catch(err => console.error('MongoDB connection error:', err));
@@ -177,6 +210,7 @@ app.use('/api', authRoutes); // Mount Auth Routes
 app.use('/api', contentRoutes); // Mount Content Routes (Products, News, etc.)
 app.use('/api', customerRoutes); // Mount Customer Routes (Registration, Contact)
 app.use('/api', systemRoutes); // Mount System Routes (Settings, Logs)
+app.use('/api/chat', chatRoutes); // Mount Chatbot Routes
 
 // --- GLOBAL ERROR HANDLER ---
 app.use((err, req, res, next) => {

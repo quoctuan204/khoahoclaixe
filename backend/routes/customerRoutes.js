@@ -164,8 +164,44 @@ router.post('/contact-advice', async (req, res) => {
 
 // Các route GET/PUT/DELETE contact tương tự...
 router.get('/contacts', protect, checkPermission(PERMISSIONS.VIEW_CUSTOMERS), async (req, res) => {
-    // ... (Logic giống server.js cũ)
-    res.json([]); // Placeholder để code chạy, bạn copy logic từ server.js cũ vào đây nếu cần chi tiết
+  try {
+    const contacts = await Contact.find().sort({ _id: -1 }); // Lấy danh sách mới nhất lên đầu
+    const decryptedContacts = contacts.map(contact => {
+      const c = contact.toObject();
+      if (c.phone) c.phone = decrypt(c.phone); // Giải mã Số điện thoại để Admin đọc được
+      return c;
+    });
+    res.status(200).json(decryptedContacts);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error fetching contacts' });
+  }
+});
+
+router.put('/contacts/:id', protect, checkPermission(PERMISSIONS.MANAGE_CUSTOMERS), async (req, res) => {
+  try {
+    const updateData = { ...req.body };
+    if (updateData.phone) updateData.phone = encrypt(updateData.phone);
+
+    const updatedContact = await Contact.findByIdAndUpdate(req.params.id, updateData, { new: true });
+    const c = updatedContact.toObject();
+    if (c.phone) c.phone = decrypt(c.phone);
+    
+    await logActivity(req, 'UPDATE', 'Contact', req.params.id, `Cập nhật trạng thái liên hệ`);
+    res.json(c);
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating contact' });
+  }
+});
+
+router.delete('/contacts/:id', protect, checkPermission(PERMISSIONS.MANAGE_CUSTOMERS), async (req, res) => {
+  try {
+    const contact = await Contact.findByIdAndDelete(req.params.id);
+    await logActivity(req, 'DELETE', contact ? contact.fullname : 'Liên hệ', req.params.id, 'Xóa yêu cầu tư vấn');
+    res.status(200).json({ message: 'Deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting contact' });
+  }
 });
 
 module.exports = router;
