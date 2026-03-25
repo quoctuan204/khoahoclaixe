@@ -14,6 +14,7 @@ const AdminSidebar = ({ isOpen, onClose }) => {
     { path: '/admin/gallery', icon: 'photo_library', label: 'Thư viện ảnh' },
     { path: '/admin/videos', icon: 'smart_display', label: 'Quản lý Video' },
     { path: '/admin/news', icon: 'article', label: 'Tin tức' },
+    { path: '/admin/forms', icon: 'description', label: 'Quản lý Biểu mẫu' },
     { path: '/admin/audit-logs', icon: 'history', label: 'Lịch sử hoạt động' },
     { path: '/admin/settings', icon: 'settings', label: 'Cài đặt' },
   ]

@@ -14,6 +14,7 @@ import ScrollToTop from './components/ScrollToTop'
 import LoadingOverlay from './components/LoadingOverlay'
 import BackToTopButton from './components/BackToTopButton'
 import FloatingContact from './components/FloatingContact'
+import ChatbotWidget from './components/ChatbotWidget'
 import AdminRoute from './components/AdminRoute'
 import AdminLayout from './components/AdminLayout'
 
@@ -50,6 +51,8 @@ import Settings from './pages/Settings'
 import AdminProfile from './pages/AdminProfile'
 import StudentDetail from './pages/StudentDetail'
 import AdminAuditLog from './pages/AdminAuditLog'
+import AdminForms from './pages/AdminForms'
+import DownloadForms from './pages/DownloadForms'
 import Maintenance from './pages/Maintenance'
 
 const PublicLayout = () => (
@@ -61,6 +64,7 @@ const PublicLayout = () => (
     <Footer />
     <BackToTopButton />
     <FloatingContact />
+    <ChatbotWidget />
   </>
 )
 
@@ -117,6 +121,7 @@ const AppRoutes = () => {
               <Route path='news' element={<AdminNews />} />
               <Route path='news/:id' element={<AdminNewsDetail />} />
               <Route path='audit-logs' element={<AdminAuditLog />} />
+              <Route path='forms' element={<AdminForms />} />
               
               <Route path='settings' element={<AdminRoute allowedRoles={['admin', 'superadmin']}><Settings /></AdminRoute>} />
               <Route path='profile' element={<AdminProfile />} />
@@ -140,6 +145,7 @@ const AppRoutes = () => {
               <Route path='/giohoc' element={<Timeframe />} />
               <Route path='/thu-vien-anh' element={<Gallery />} />
               <Route path='/thu-vien-video' element={<VideoLibrary />} />
+              <Route path='/tai-bieu-mau' element={<DownloadForms />} />
               
               {/* Catch-all Route for 404 */}
               <Route path='*' element={<NotFound />} />

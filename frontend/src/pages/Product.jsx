@@ -503,8 +503,10 @@ const Product = () => {
                                         <span className='material-symbols-outlined'>description</span>
                                     </div>
                                     <div>
-                                        <h4 className='font-bold text-gray-900 text-lg'>Đơn đề nghị học, sát hạch</h4>
-                                        <p className='text-gray-500 text-sm mt-1'>Được cấp miễn phí tại trung tâm. Điền thông tin trực tiếp khi đăng ký.</p>
+                                        <Link to="/tai-bieu-mau" className='font-bold text-gray-900 text-lg hover:text-[#135bec] transition-colors inline-block'>
+                                            Đơn đề nghị học, sát hạch
+                                        </Link>
+                                        <p className='text-gray-500 text-sm mt-1'>Được cấp miễn phí tại trung tâm. Hoặc <Link to="/tai-bieu-mau" className="text-[#135bec] font-bold hover:underline cursor-pointer">👉 Nhấn vào đây để tải biểu mẫu</Link></p>
                                     </div>
                                 </div>
                             </div>

@@ -14,6 +14,8 @@ const AdminContacts = () => {
   const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE) || 'http://localhost:5000'
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deleteId, setDeleteId] = useState(null)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [sourceFilter, setSourceFilter] = useState('all')
 
   useEffect(() => {
     fetchContacts()
@@ -21,7 +23,9 @@ const AdminContacts = () => {
 
   const fetchContacts = async () => {
     try {
-      const res = await fetch(`${API_BASE}/api/contacts`)
+      const res = await fetch(`${API_BASE}/api/contacts`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
       if (res.ok) {
         const data = await res.json()
         setContacts(data)
@@ -83,7 +87,19 @@ const AdminContacts = () => {
     }
   }
 
-  const sortedContacts = [...contacts].sort((a, b) => {
+  const filteredContacts = contacts.filter(item => {
+    const matchesSearch = (item.fullname || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          (item.phone || '').includes(searchTerm);
+    
+    const isChatbot = (item.note || '').includes('Hệ thống AI tự động thu thập');
+    let matchesSource = true;
+    if (sourceFilter === 'chatbot') matchesSource = isChatbot;
+    if (sourceFilter === 'website') matchesSource = !isChatbot;
+
+    return matchesSearch && matchesSource;
+  })
+
+  const sortedContacts = [...filteredContacts].sort((a, b) => {
     const statusA = a.status || 'pending'
     const statusB = b.status || 'pending'
     
@@ -148,6 +164,28 @@ const AdminContacts = () => {
           className='bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium w-full md:w-auto justify-center'>
           <span className="material-symbols-outlined text-[20px]">download</span> Xuất Excel
         </button>
+      </div>
+
+      {/* Filters & Search */}
+      <div className='bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-6 flex flex-col sm:flex-row gap-4'>
+        <div className='flex-1 relative'>
+          <span className="material-symbols-outlined absolute left-3 top-2.5 text-gray-400">search</span>
+          <input 
+            type="text" 
+            placeholder="Tìm kiếm theo tên hoặc SĐT..." 
+            value={searchTerm}
+            onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+            className='w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+          />
+        </div>
+        <select 
+          value={sourceFilter}
+          onChange={(e) => { setSourceFilter(e.target.value); setCurrentPage(1); }}
+          className='w-full sm:w-48 px-4 py-2 border border-gray-300 rounded-lg outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-white'>
+          <option value="all">Tất cả nguồn</option>
+          <option value="chatbot">Từ AI Chatbot</option>
+          <option value="website">Từ Form Website</option>
+        </select>
       </div>
 
       {/* Desktop/Tablet Table View */}

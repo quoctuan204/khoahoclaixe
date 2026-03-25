@@ -32,7 +32,9 @@ const AdminDashboard = () => {
   useEffect(() => {
     const fetchRegistrations = async () => {
       try {
-        const response = await fetch(`${API_BASE}/api/registrations`)
+        const response = await fetch(`${API_BASE}/api/registrations`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
         if (response.ok) {
           const data = await response.json()
           setRegistrations(data)
