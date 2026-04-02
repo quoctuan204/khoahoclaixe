@@ -37,21 +37,29 @@ router.put('/products/:id', protect, checkPermission(PERMISSIONS.MANAGE_CONTENT)
       req.body,
       { new: true, upsert: true }
     );
-    await logActivity(req, 'UPDATE', 'Product', req.params.id, `Updated product ${req.body.title}`);
+    try { await logActivity(req, 'UPDATE', 'Product', updatedProduct._id, `Updated product ${req.body.title}`); } catch(e){}
     res.json(updatedProduct);
   } catch (error) {
-    res.status(500).json({ message: 'Error updating product' });
+    console.error('Lỗi khi cập nhật khóa học:', error);
+    res.status(500).json({ message: error.message || 'Lỗi hệ thống khi cập nhật khóa học' });
   }
 });
 
 router.post('/products', protect, checkPermission(PERMISSIONS.MANAGE_CONTENT), async (req, res) => {
   try {
+    // Kiểm tra mã ID đã tồn tại chưa để báo lỗi rõ ràng
+    const existing = await Product.findOne({ id: req.body.id });
+    if (existing) {
+      return res.status(400).json({ message: 'Mã khóa học (ID) đã tồn tại! Vui lòng chọn mã khác.' });
+    }
+    
     const newProduct = new Product(req.body);
     await newProduct.save();
-    await logActivity(req, 'CREATE', 'Product', newProduct.id, `Created product ${newProduct.title}`);
+    try { await logActivity(req, 'CREATE', 'Product', newProduct._id, `Created product ${newProduct.title}`); } catch(e){}
     res.status(201).json(newProduct);
   } catch (error) {
-    res.status(500).json({ message: 'Error creating product' });
+    console.error('Lỗi khi tạo khóa học:', error);
+    res.status(500).json({ message: error.message || 'Lỗi hệ thống khi tạo khóa học' });
   }
 });
 
@@ -59,10 +67,11 @@ router.delete('/products/:id', protect, checkPermission(PERMISSIONS.MANAGE_CONTE
   try {
     const product = await Product.findOneAndDelete({ id: req.params.id });
     const reason = req.body.reason || 'Không có lý do';
-    await logActivity(req, 'DELETE', product ? product.title : 'Product', req.params.id, `Lý do: ${reason}`);
+    try { await logActivity(req, 'DELETE', product ? product.title : 'Product', product ? product._id : null, `Lý do: ${reason}`); } catch(e){}
     res.json({ message: 'Product deleted' });
   } catch (error) {
-    res.status(500).json({ message: 'Error deleting product' });
+    console.error('Lỗi khi xóa khóa học:', error);
+    res.status(500).json({ message: error.message || 'Lỗi hệ thống khi xóa khóa học' });
   }
 });
 
