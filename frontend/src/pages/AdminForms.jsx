@@ -66,7 +66,7 @@ const AdminForms = () => {
           <h3 className='text-lg font-bold text-[#135bec] mb-4'>1. Đơn đề nghị học, sát hạch</h3>
           {formData.form1Url && (
             <div className='mb-3 text-sm text-green-600 flex items-center gap-2'>
-              <span className='material-symbols-outlined'>check_circle</span> Đã tải lên: <a href={`${API_BASE}${formData.form1Url}`} target='_blank' rel='noreferrer' className='font-bold underline'>{formData.form1Name || 'Xem file'}</a>
+              <span className='material-symbols-outlined'>check_circle</span> Đã tải lên: <a href={formData.form1Url.startsWith('http') ? formData.form1Url : `${API_BASE}${formData.form1Url}`} target='_blank' rel='noreferrer' className='font-bold underline'>{formData.form1Name || 'Xem file'}</a>
             </div>
           )}
           <input type='file' accept='.pdf,.doc,.docx' onChange={e => setFile1(e.target.files[0])} className='block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer' />
@@ -76,7 +76,7 @@ const AdminForms = () => {
           <h3 className='text-lg font-bold text-[#135bec] mb-4'>2. File biểu mẫu số 2 (VD: Giấy khám sức khỏe)</h3>
           {formData.form2Url && (
             <div className='mb-3 text-sm text-green-600 flex items-center gap-2'>
-              <span className='material-symbols-outlined'>check_circle</span> Đã tải lên: <a href={`${API_BASE}${formData.form2Url}`} target='_blank' rel='noreferrer' className='font-bold underline'>{formData.form2Name || 'Xem file'}</a>
+              <span className='material-symbols-outlined'>check_circle</span> Đã tải lên: <a href={formData.form2Url.startsWith('http') ? formData.form2Url : `${API_BASE}${formData.form2Url}`} target='_blank' rel='noreferrer' className='font-bold underline'>{formData.form2Name || 'Xem file'}</a>
             </div>
           )}
           <input type='file' accept='.pdf,.doc,.docx' onChange={e => setFile2(e.target.files[0])} className='block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer' />
