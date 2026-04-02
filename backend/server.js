@@ -8,6 +8,8 @@ const fs = require('fs');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const cron = require('node-cron');
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 dotenv.config();
 
@@ -54,34 +56,24 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir);
 }
 
-// Configure Multer storage
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/');
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
-  }
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-// Filter for images
-const fileFilter = (req, file, cb) => {
-  // SECURITY: Whitelist extensions to prevent executable/script uploads
-  const filetypes = /jpeg|jpg|png|gif|webp/;
-  const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-  const mimetype = filetypes.test(file.mimetype);
-
-  if (mimetype && extname) {
-    return cb(null, true);
-  } else {
-    cb(new Error('Chỉ cho phép upload file ảnh (jpg, jpeg, png, gif, webp)!'), false);
-  }
-};
+// Configure Multer Storage for Cloudinary
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'khoahoclaixe', // Tạo thư mục riêng trên Cloudinary
+    allowed_formats: ['jpeg', 'jpg', 'png', 'gif', 'webp']
+  },
+});
 
 const upload = multer({ 
   storage: storage,
-  fileFilter: fileFilter,
   limits: { fileSize: 5 * 1024 * 1024 } // Limit 5MB
 });
 
@@ -94,31 +86,29 @@ app.post('/api/upload', protect, (req, res) => {
   upload.single('image')(req, res, (err) => {
     if (err) return res.status(400).json({ message: err.message || 'Lỗi upload file' });
     if (!req.file) return res.status(400).json({ message: 'Chưa chọn file' });
-    const imageUrl = `/uploads/${req.file.filename}`;
+    // Cloudinary trả về đường dẫn URL an toàn trực tiếp
+    const imageUrl = req.file.path;
     res.json({ imageUrl });
   });
 });
 
 // --- UPLOAD VIDEO ---
-const videoStorage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, 'uploads/'),
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'video-' + uniqueSuffix + path.extname(file.originalname));
+const videoCloudinaryStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'khoahoclaixe_videos', // Lưu vào thư mục riêng
+    resource_type: 'video', // Bắt buộc phải có để upload video/audio lên Cloudinary
+    allowed_formats: ['mp4', 'webm', 'ogg', 'mov']
   }
 });
-const videoFileFilter = (req, file, cb) => {
-  const filetypes = /mp4|webm|ogg|mov/;
-  if (filetypes.test(path.extname(file.originalname).toLowerCase())) return cb(null, true);
-  cb(new Error('Chỉ cho phép file video (mp4, webm, ogg, mov)!'), false);
-};
-const uploadVideo = multer({ storage: videoStorage, fileFilter: videoFileFilter, limits: { fileSize: 50 * 1024 * 1024 } }); // Tối đa 50MB
+
+const uploadVideo = multer({ storage: videoCloudinaryStorage, limits: { fileSize: 50 * 1024 * 1024 } }); // Tối đa 50MB
 
 app.post('/api/upload-video', protect, (req, res) => {
   uploadVideo.single('file')(req, res, (err) => {
     if (err) return res.status(400).json({ message: err.message || 'Lỗi upload file video' });
     if (!req.file) return res.status(400).json({ message: 'Chưa chọn file' });
-    res.json({ videoUrl: `/uploads/${req.file.filename}`, fileName: req.file.originalname });
+    res.json({ videoUrl: req.file.path, fileName: req.file.originalname });
   });
 });
 
