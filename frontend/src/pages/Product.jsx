@@ -122,6 +122,10 @@ const Product = () => {
           const formData = new FormData()
           formData.append('image', imageFile)
           const uploadRes = await fetch(`${API_BASE}/api/upload`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData })
+          if (!uploadRes.ok) {
+            const errData = await uploadRes.json().catch(() => ({}));
+            throw new Error(errData.message || 'Lỗi tải ảnh lên server');
+          }
           const uploadJson = await uploadRes.json()
           if (uploadJson.imageUrl) {
             finalImage = uploadJson.imageUrl.startsWith('http') ? uploadJson.imageUrl : `${API_BASE}${uploadJson.imageUrl}`
