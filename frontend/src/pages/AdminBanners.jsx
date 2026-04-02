@@ -12,6 +12,8 @@ const AdminBanners = () => {
 
   const [imageFiles, setImageFiles] = useState([])
   const [previews, setPreviews] = useState([])
+  const [editingId, setEditingId] = useState(null)
+  const [existingImage, setExistingImage] = useState(null)
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -55,9 +57,14 @@ const AdminBanners = () => {
   const handleFileSelect = (e) => {
     const files = Array.from(e.target.files)
     if (files.length > 0) {
-      setImageFiles(prev => [...prev, ...files]) // Cộng dồn ảnh mới vào danh sách cũ
-      const newPreviews = files.map(file => URL.createObjectURL(file))
-      setPreviews(prev => [...prev, ...newPreviews])
+      if (editingId) {
+        setImageFiles([files[0]])
+        setPreviews([URL.createObjectURL(files[0])])
+      } else {
+        setImageFiles(prev => [...prev, ...files]) // Cộng dồn ảnh mới vào danh sách cũ
+        const newPreviews = files.map(file => URL.createObjectURL(file))
+        setPreviews(prev => [...prev, ...newPreviews])
+      }
     }
     e.target.value = null // Reset để có thể chọn lại file vừa chọn nếu muốn
   }
@@ -71,38 +78,57 @@ const AdminBanners = () => {
     })
   }
 
+  const handleEdit = (banner) => {
+    setEditingId(banner._id)
+    setExistingImage(banner.image)
+    setFormData({
+      title: banner.title || '',
+      description: banner.description || '',
+      buttonText: banner.buttonText || 'Đăng ký tư vấn',
+      link: banner.link || '/lien_he'
+    })
+    setImageFiles([])
+    setPreviews([])
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const handleCancelEdit = () => {
+    setEditingId(null)
+    setExistingImage(null)
+    setFormData({ title: '', description: '', buttonText: 'Đăng ký tư vấn', link: '/lien_he' })
+    setImageFiles([])
+    setPreviews([])
+  }
+
   const handleSave = async () => {
-    if (imageFiles.length === 0) return toast.error('Vui lòng chọn ít nhất 1 ảnh')
+    if (!editingId && imageFiles.length === 0) return toast.error('Vui lòng chọn ít nhất 1 ảnh')
     setUploading(true)
     try {
-      let successCount = 0
-      for (const file of imageFiles) {
-        // 1. Upload file
-        const uploadData = new FormData()
-        uploadData.append('image', file)
-        
-        const uploadRes = await fetch(`${API_BASE}/api/upload`, {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${token}` },
-          body: uploadData
-        })
-        
-        if (!uploadRes.ok) {
-          const errData = await uploadRes.json().catch(() => ({}));
-          throw new Error(errData.message || 'Lỗi tải ảnh lên server');
+      if (editingId) {
+        let finalImage = existingImage;
+        if (imageFiles.length > 0) {
+          const uploadData = new FormData()
+          uploadData.append('image', imageFiles[0])
+          const uploadRes = await fetch(`${API_BASE}/api/upload`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` },
+            body: uploadData
+          })
+          if (!uploadRes.ok) {
+            const errData = await uploadRes.json().catch(() => ({}));
+            throw new Error(errData.message || 'Lỗi tải ảnh lên server');
+          }
+          const uploadJson = await uploadRes.json()
+          if (uploadJson.imageUrl) finalImage = uploadJson.imageUrl
         }
-        
-        const uploadJson = await uploadRes.json()
-        if (!uploadJson.imageUrl) continue
 
-        // 2. Save to Banner DB
         const bannerData = {
           ...formData,
-          image: uploadJson.imageUrl
+          image: finalImage ? finalImage.replace(API_BASE, '') : ''
         }
 
-        const saveRes = await fetch(`${API_BASE}/api/banners`, {
-          method: 'POST',
+        const saveRes = await fetch(`${API_BASE}/api/banners/${editingId}`, {
+          method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
@@ -110,17 +136,57 @@ const AdminBanners = () => {
           body: JSON.stringify(bannerData)
         })
 
-        if (saveRes.ok) successCount++
-      }
-
-      if (successCount > 0) {
-        toast.success(`Đã thêm ${successCount} banner thành công`)
-        setFormData({ title: '', description: '', buttonText: 'Đăng ký tư vấn', link: '/lien_he' }) // Reset form
-        setImageFiles([])
-        setPreviews([])
-        fetchBanners() // Refresh list
+        if (saveRes.ok) {
+          toast.success('Cập nhật banner thành công')
+          handleCancelEdit()
+          fetchBanners()
+        } else {
+          toast.error('Cập nhật thất bại')
+        }
       } else {
-        toast.error('Lưu thất bại')
+        let successCount = 0
+        for (const file of imageFiles) {
+          const uploadData = new FormData()
+          uploadData.append('image', file)
+          
+          const uploadRes = await fetch(`${API_BASE}/api/upload`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` },
+            body: uploadData
+          })
+          
+          if (!uploadRes.ok) {
+            const errData = await uploadRes.json().catch(() => ({}));
+            throw new Error(errData.message || 'Lỗi tải ảnh lên server');
+          }
+          
+          const uploadJson = await uploadRes.json()
+          if (!uploadJson.imageUrl) continue
+
+          const bannerData = {
+            ...formData,
+            image: uploadJson.imageUrl.replace(API_BASE, '')
+          }
+
+          const saveRes = await fetch(`${API_BASE}/api/banners`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(bannerData)
+          })
+
+          if (saveRes.ok) successCount++
+        }
+
+        if (successCount > 0) {
+          toast.success(`Đã thêm ${successCount} banner thành công`)
+          handleCancelEdit()
+          fetchBanners()
+        } else {
+          toast.error('Lưu thất bại')
+        }
       }
     } catch (error) {
       console.error(error)
@@ -154,7 +220,7 @@ const AdminBanners = () => {
 
       {/* Upload Area */}
       <div className='bg-white p-6 rounded-xl shadow-sm border border-gray-200 mb-8'>
-        <h3 className='text-lg font-bold mb-4'>Thêm Banner Mới</h3>
+        <h3 className='text-lg font-bold mb-4'>{editingId ? 'Chỉnh sửa Banner' : 'Thêm Banner Mới'}</h3>
         <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mb-4'>
             <div>
                 <label className='block text-sm font-medium text-gray-700 mb-1'>Tiêu đề lớn</label>
@@ -200,9 +266,9 @@ const AdminBanners = () => {
              <div className='flex items-center gap-4'>
                 <label htmlFor="banner-upload" className={`cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors`}>
                     <span className="material-symbols-outlined">image</span>
-                    Chọn ảnh nền
+                    {editingId ? 'Đổi ảnh nền' : 'Chọn ảnh nền'}
                 </label>
-                <input id="banner-upload" type="file" className="hidden" accept="image/*" multiple onChange={handleFileSelect} disabled={uploading} />
+                <input id="banner-upload" type="file" className="hidden" accept="image/*" multiple={!editingId} onChange={handleFileSelect} disabled={uploading} />
                 <p className="text-sm text-gray-500">Khuyên dùng ảnh kích thước lớn (1920x1080)</p>
              </div>
 
@@ -222,15 +288,32 @@ const AdminBanners = () => {
                         </div>
                     ))}
                 </div>
+             ) : (editingId && existingImage && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="relative group">
+                        <img src={existingImage} alt="Existing" className='h-24 w-full object-cover rounded-lg border border-gray-300' />
+                    </div>
+                </div>
              )}
 
-             <button 
-                onClick={handleSave}
-                disabled={uploading || imageFiles.length === 0}
-                className={`w-fit bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg flex items-center justify-center gap-2 transition-colors ${uploading || imageFiles.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}>
-                <span className="material-symbols-outlined">save</span>
-                {uploading ? 'Đang lưu...' : `Lưu`}
-             </button>
+             <div className='flex gap-4'>
+               <button 
+                  onClick={handleSave}
+                  disabled={uploading || (!editingId && imageFiles.length === 0)}
+                  className={`w-fit bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg flex items-center justify-center gap-2 transition-colors ${uploading || (!editingId && imageFiles.length === 0) ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                  <span className="material-symbols-outlined">save</span>
+                  {uploading ? 'Đang lưu...' : `Lưu`}
+               </button>
+               {editingId && (
+                 <button 
+                    onClick={handleCancelEdit}
+                    disabled={uploading}
+                    className={`w-fit bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg flex items-center justify-center gap-2 transition-colors ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                    <span className="material-symbols-outlined">cancel</span>
+                    Hủy sửa
+                 </button>
+               )}
+             </div>
         </div>
       </div>
 
@@ -244,13 +327,22 @@ const AdminBanners = () => {
                  <h3 className='font-bold text-xl mb-1'>{banner.title || '(Không có tiêu đề)'}</h3>
                  <p className='text-sm opacity-90 line-clamp-2'>{banner.description}</p>
               </div>
-              <button 
-                onClick={() => handleDelete(banner._id)} 
-                className='absolute top-4 right-4 bg-red-600 text-white p-2 rounded-full hover:bg-red-700 shadow-lg transition-opacity'
-                title="Xóa banner"
-              >
-                <span className="material-symbols-outlined text-sm">delete</span>
-              </button>
+              <div className='absolute top-4 right-4 flex gap-2'>
+                <button 
+                  onClick={() => handleEdit(banner)} 
+                  className='bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 shadow-lg transition-opacity'
+                  title="Sửa banner"
+                >
+                  <span className="material-symbols-outlined text-sm">edit</span>
+                </button>
+                <button 
+                  onClick={() => handleDelete(banner._id)} 
+                  className='bg-red-600 text-white p-2 rounded-full hover:bg-red-700 shadow-lg transition-opacity'
+                  title="Xóa banner"
+                >
+                  <span className="material-symbols-outlined text-sm">delete</span>
+                </button>
+              </div>
             </div>
           ))}
         </div>
