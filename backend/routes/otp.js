@@ -1,15 +1,13 @@
 require("dotenv").config();
 const express = require("express");
-const app = express();
-
-app.use(express.json());
+const router = express.Router();
 
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken  = process.env.TWILIO_AUTH_TOKEN;
 
 const client = require("twilio")(accountSid, authToken);
 
-app.post("/api/send-otp", async (req, res) => {
+router.post("/send-otp", async (req, res) => {
   try {
     const { phone } = req.body; // +84xxxxxxxxx
 
@@ -35,7 +33,7 @@ app.post("/api/send-otp", async (req, res) => {
   }
 });
 
-app.post("/api/verify-otp", async (req, res) => {
+router.post("/verify-otp", async (req, res) => {
   try {
     const { phone, code } = req.body;
 
@@ -61,12 +59,4 @@ app.post("/api/verify-otp", async (req, res) => {
   }
 });
 
-/* Test gọi API (Đã comment lại để tránh lỗi chạy tự động)
-fetch("https://khoahoclaixe.onrender.com/api/send-otp", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    phone: "+840349292958"
-  })
-});
-*/
+module.exports = router;
