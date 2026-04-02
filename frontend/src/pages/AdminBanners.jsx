@@ -272,7 +272,7 @@ const AdminBanners = () => {
                 <p className="text-sm text-gray-500">Khuyên dùng ảnh kích thước lớn (1920x1080)</p>
              </div>
 
-             {previews.length > 0 && (
+     {previews.length > 0 ? (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {previews.map((src, index) => (
                         <div key={index} className="relative group">
@@ -288,13 +288,13 @@ const AdminBanners = () => {
                         </div>
                     ))}
                 </div>
-             ) : (editingId && existingImage && (
+     ) : (editingId && existingImage ? (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="relative group">
                         <img src={existingImage} alt="Existing" className='h-24 w-full object-cover rounded-lg border border-gray-300' />
                     </div>
                 </div>
-             )}
+     ) : null)}
 
              <div className='flex gap-4'>
                <button 
