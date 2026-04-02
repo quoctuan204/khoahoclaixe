@@ -39,20 +39,23 @@ const AdminCourseDetail = () => {
     }
 
     const fetchProduct = async () => {
-      const pLocal = products.find(x => x.id === id)
-      if (!pLocal) {
-        toast.error('Khóa học không tồn tại')
-        navigate('/admin/courses')
-        return
-      }
-
       try {
         const r = await fetch(`${API_BASE}/api/products/${id}`)
+        let pDb = null
         if (r.ok) {
-          const pDb = await r.json()
-          const merged = { ...pLocal, ...pDb }
+          pDb = await r.json()
+        }
+        
+        const pLocal = products.find(x => x.id === id)
+
+        if (!pDb && !pLocal) {
+          toast.error('Khóa học không tồn tại')
+          navigate('/admin/courses')
+          return
+        }
+
+        const merged = { ...pLocal, ...pDb }
           
-          // Xử lý đường dẫn ảnh
           if (merged.image && typeof merged.image === 'string' && merged.image.startsWith('/uploads/')) {
             merged.image = `${API_BASE}${merged.image}`
           }
@@ -74,23 +77,6 @@ const AdminCourseDetail = () => {
             examFee: merged.examFee || '',
             isVisible: merged.isVisible !== false
           })
-        } else {
-          // Nếu chưa có trong DB, dùng data local
-          setFormData({
-            id: pLocal.id,
-            title: pLocal.title || '',
-            description: pLocal.description || '',
-            price: pLocal.price || '',
-            oldPrice: pLocal.oldPrice || '',
-            duration: pLocal.duration || '',
-            vehicle: pLocal.vehicle || '',
-            image: pLocal.image || '',
-            highlights: Array.isArray(pLocal.highlights) ? pLocal.highlights.join('\n') : '',
-            theoryFee: '',
-            examFee: '',
-            isVisible: true
-          })
-        }
       } catch (error) {
         console.error(error)
         toast.error('Lỗi tải dữ liệu')
@@ -164,7 +150,11 @@ const AdminCourseDetail = () => {
       if (imageFile) {
         const data = new FormData()
         data.append('image', imageFile)
-        const uploadRes = await fetch(`${API_BASE}/api/upload`, { method: 'POST', body: data })
+        const uploadRes = await fetch(`${API_BASE}/api/upload`, { 
+          method: 'POST', 
+          headers: { 'Authorization': `Bearer ${token}` },
+          body: data 
+        })
         const uploadJson = await uploadRes.json()
         if (uploadJson.imageUrl) {
           finalImage = `${API_BASE}${uploadJson.imageUrl}`
@@ -191,7 +181,8 @@ const AdminCourseDetail = () => {
         toast.success(isNew ? 'Thêm khóa học thành công!' : 'Cập nhật khóa học thành công!')
         if (isNew) navigate('/admin/courses')
       } else {
-        toast.error('Cập nhật thất bại')
+        const errData = await r.json().catch(() => ({}));
+        toast.error(errData.message || 'Cập nhật thất bại. Vui lòng kiểm tra lại thông tin.');
       }
     } catch {
       toast.error('Lỗi kết nối server')

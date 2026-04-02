@@ -34,10 +34,15 @@ const AdminBanners = () => {
       const res = await fetch(`${API_BASE}/api/banners`)
       if (res.ok) {
         const data = await res.json()
-        const processed = data.map(item => ({
-            ...item,
-            image: item.image.startsWith('/uploads/') ? `${API_BASE}${item.image}` : item.image
-        }))
+        const processed = data.map(item => {
+            let imgUrl = item.image;
+            if (imgUrl) {
+                imgUrl = imgUrl.replace(/\\/g, '/');
+                if (imgUrl.startsWith('uploads/')) imgUrl = '/' + imgUrl;
+                if (imgUrl.startsWith('/uploads/')) imgUrl = `${API_BASE}${imgUrl}`;
+            }
+            return { ...item, image: imgUrl };
+        })
         setBanners(processed)
       }
     } catch (error) {
@@ -229,7 +234,7 @@ const AdminBanners = () => {
         <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
           {banners.map(banner => (
             <div key={banner._id} className='group relative aspect-video bg-gray-100 rounded-xl overflow-hidden border border-gray-200 shadow-sm'>
-              <img src={banner.image} alt={banner.title} className='w-full h-full object-cover' />
+              <img src={banner.image || undefined} alt={banner.title} className='w-full h-full object-cover' />
               <div className='absolute inset-0 bg-black/40 flex flex-col justify-end p-6 text-white'>
                  <h3 className='font-bold text-xl mb-1'>{banner.title || '(Không có tiêu đề)'}</h3>
                  <p className='text-sm opacity-90 line-clamp-2'>{banner.description}</p>

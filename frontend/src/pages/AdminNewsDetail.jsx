@@ -95,7 +95,11 @@ const AdminNewsDetail = () => {
       if (imageFile) {
         const data = new FormData()
         data.append('image', imageFile)
-        const uploadRes = await fetch(`${API_BASE}/api/upload`, { method: 'POST', body: data })
+        const uploadRes = await fetch(`${API_BASE}/api/upload`, { 
+          method: 'POST', 
+          headers: { 'Authorization': `Bearer ${token}` },
+          body: data 
+        })
         const uploadJson = await uploadRes.json()
         if (uploadJson.imageUrl) {
           finalImage = `${API_BASE}${uploadJson.imageUrl}`

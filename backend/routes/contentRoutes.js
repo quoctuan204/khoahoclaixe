@@ -163,13 +163,11 @@ router.get('/videos', async (req, res) => {
 router.post('/videos', protect, checkPermission(PERMISSIONS.MANAGE_CONTENT), async (req, res) => {
   try {
     const { url, title, description } = req.body;
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-    const match = url.match(regExp);
-    const videoId = (match && match[2].length === 11) ? match[2] : null;
 
-    if (!videoId) return res.status(400).json({ message: 'Link YouTube không hợp lệ' });
+    if (!url) return res.status(400).json({ message: 'Thiếu đường dẫn video' });
 
-    const newVideo = new Video({ title, videoId, description });
+    // Dùng lại trường videoId để lưu đường dẫn file video để không phải sửa Database Schema
+    const newVideo = new Video({ title, videoId: url, description });
     await newVideo.save();
     await logActivity(req, 'CREATE', 'Video', newVideo._id, `Added video: ${title}`);
     res.status(201).json(newVideo);

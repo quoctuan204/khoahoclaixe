@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { assets } from '../assets/assets.js'
 import SmartNavLink from './SmartNavLink'
 import SmartLink from './SmartLink'
@@ -11,6 +11,8 @@ const Navbar = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE) || 'http://localhost:5000'
   const [hotline, setHotline] = useState('1900 1000')
+  const navRef = useRef(null)
+  const adminDropdownRef = useRef(null)
 
   useEffect(() => {
     fetch(`${API_BASE}/api/settings`)
@@ -19,8 +21,21 @@ const Navbar = () => {
       .catch(err => console.error(err))
   }, [API_BASE])
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (navRef.current && !navRef.current.contains(event.target)) {
+        setOpen(false) // Đóng menu mobile
+      }
+      if (adminDropdownRef.current && !adminDropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false) // Đóng menu admin
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
   return (
-    <div className="sticky top-0 z-50 bg-white py-5 font-medium shadow-sm">
+    <div ref={navRef} className="sticky top-0 z-50 bg-white py-5 font-medium shadow-sm">
       {/* WRAPPER */}
       <div className="max-w-[1280px] mx-auto px-4 lg:px-10 flex items-center justify-between">
 
@@ -80,18 +95,26 @@ const Navbar = () => {
 
           {/* ROLE SWITCH (dev-friendly) */}
           {isAdmin && (
-            <div className="relative hidden sm:block">
+            <div className="relative" ref={adminDropdownRef}>
+              {(() => {
+                let avatarUrl = user?.avatar;
+                if (avatarUrl) {
+                    avatarUrl = avatarUrl.replace(/\\/g, '/');
+                    if (avatarUrl.startsWith('uploads/')) avatarUrl = '/' + avatarUrl;
+                    if (avatarUrl.startsWith('/uploads/')) avatarUrl = `${API_BASE}${avatarUrl}`;
+                }
+                return (
               <button 
                 onClick={() => setDropdownOpen(!dropdownOpen)}
                 className='flex items-center gap-3 focus:outline-none'
               >
-                <div className='text-right'>
+                <div className='hidden sm:block text-right'>
                   <p className='text-sm font-bold text-gray-900'>{user?.fullName || user?.username || 'Admin'}</p>
                   <p className='text-xs text-gray-500'>Giảng viên</p>
                 </div>
-                {user?.avatar ? (
+                {avatarUrl ? (
                   <img 
-                    src={user.avatar.startsWith('/uploads/') ? `${API_BASE}${user.avatar}` : user.avatar} 
+                    src={avatarUrl} 
                     alt="Avatar" 
                     className='h-10 w-10 rounded-full object-cover border border-blue-200'
                   />
@@ -101,11 +124,11 @@ const Navbar = () => {
                   </div>
                 )}
               </button>
+              )
+              })()}
 
               {dropdownOpen && (
-                <>
-                  <div className="fixed inset-0 z-10" onClick={() => setDropdownOpen(false)}></div>
-                  <div className='absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-20 border border-gray-200'>
+                <div className='absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-20 border border-gray-200'>
                     <Link 
                       to="/admin"
                       onClick={() => setDropdownOpen(false)}
@@ -133,8 +156,7 @@ const Navbar = () => {
                       <span className="material-symbols-outlined text-lg">logout</span>
                       Đăng xuất
                     </button>
-                  </div>
-                </>
+                </div>
               )}
             </div>
           )}

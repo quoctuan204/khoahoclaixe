@@ -1,13 +1,21 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { assets } from '../assets/assets'
 import { useNavigate } from 'react-router-dom'
 import { products } from '../data/products'
+import FadeIn from './FadeIn'
 
 const Courses = () => {
   const navigate = useNavigate();
   const handleOpen = (id) => navigate(`/product/${id}`)
   const [courseList, setCourseList] = useState(products)
   const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE) || 'http://localhost:5000'
+  const scrollRef = useRef(null)
+  
+  // Trạng thái cho tính năng kéo vuốt bằng chuột
+  const [isDown, setIsDown] = useState(false)
+  const startX = useRef(0)
+  const scrollLeftPos = useRef(0)
+  const dragged = useRef(false)
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -15,25 +23,32 @@ const Courses = () => {
         const res = await fetch(`${API_BASE}/api/products`)
         if (res.ok) {
           const dbProducts = await res.json()
-          if (dbProducts.length > 0) {
-            // Nếu có dữ liệu từ DB, sử dụng dữ liệu DB làm nguồn chính
-            const processed = dbProducts.map(dp => {
-              let img = dp.image
-              if (img && img.startsWith('/uploads/')) {
-                img = `${API_BASE}${img}`
-              }
-              // Fallback nếu DB không có ảnh thì dùng ảnh mặc định từ assets (nếu khớp ID)
-              if (!img) {
-                 const staticP = products.find(p => p.id === dp.id)
-                 if (staticP) img = staticP.image
-              }
-              return { ...dp, image: img, highlights: dp.highlights || [] }
-            })
-            setCourseList(processed)
-          } else {
-            // Fallback về dữ liệu tĩnh nếu DB rỗng
-            setCourseList(products)
-          }
+          
+          // Kết hợp dữ liệu tĩnh mặc định và dữ liệu từ DB (cập nhật hoặc thêm mới)
+          const mergedStatic = products.map(p => {
+            const dbP = dbProducts.find(dp => dp.id === p.id)
+            const finalP = dbP ? { ...p, ...dbP } : p
+            let img = finalP.image
+            if (img) {
+              img = img.replace(/\\/g, '/');
+              if (img.startsWith('uploads/')) img = '/' + img;
+              if (img.startsWith('/uploads/')) img = `${API_BASE}${img}`;
+            }
+            return { ...finalP, image: img, highlights: finalP.highlights || [] }
+          })
+
+          const newFromDb = dbProducts.filter(dp => !products.find(p => p.id === dp.id)).map(dp => {
+            let img = dp.image
+            if (img) {
+              img = img.replace(/\\/g, '/');
+              if (img.startsWith('uploads/')) img = '/' + img;
+              if (img.startsWith('/uploads/')) img = `${API_BASE}${img}`;
+            }
+            return { ...dp, image: img, highlights: dp.highlights || [] }
+          })
+
+          const finalCourses = [...mergedStatic, ...newFromDb].filter(p => p.isVisible !== false)
+          setCourseList(finalCourses)
         }
       } catch (error) {
         console.error(error)
@@ -41,6 +56,36 @@ const Courses = () => {
     }
     fetchProducts()
   }, [API_BASE])
+
+  // Hàm xử lý cuộn khi bấm nút
+  const scroll = (direction) => {
+    if (scrollRef.current && scrollRef.current.children.length > 0) {
+      const itemWidth = scrollRef.current.children[0].offsetWidth + 24 // Chiều rộng thực tế của 1 thẻ + gap (24px)
+      const scrollAmount = direction === 'left' ? -itemWidth : itemWidth
+      scrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' })
+    }
+  }
+
+  // Các hàm xử lý kéo vuốt (Swipe bằng chuột)
+  const handleMouseDown = (e) => {
+    setIsDown(true)
+    dragged.current = false // Reset trạng thái kéo
+    if (!scrollRef.current) return
+    startX.current = e.pageX - scrollRef.current.offsetLeft
+    scrollLeftPos.current = scrollRef.current.scrollLeft
+  }
+
+  const handleMouseLeave = () => setIsDown(false)
+  const handleMouseUp = () => setIsDown(false)
+
+  const handleMouseMove = (e) => {
+    if (!isDown || !scrollRef.current) return
+    e.preventDefault()
+    const x = e.pageX - scrollRef.current.offsetLeft
+    const walk = (x - startX.current) * 1 // Hệ số nhân tốc độ cuộn (giảm từ 1.5 xuống 1 để kéo chậm và tự nhiên hơn)
+    if (Math.abs(walk) > 10) dragged.current = true // Đánh dấu là đang kéo chứ không phải click
+    scrollRef.current.scrollLeft = scrollLeftPos.current - walk
+  }
 
   return (
     <div className='bg-[#f8f9fa] py-16 lg:py-24' id='khoa-hoc'>
@@ -55,14 +100,37 @@ const Courses = () => {
             </p>
           </div>
 
-          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'>
-            {courseList.map((p) => (
-              <div 
-                key={p.id} 
-                onClick={() => p.isVisible !== false && handleOpen(p.id)} 
-                className={`flex flex-col bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-lg transition-all duration-300 group ${p.isVisible === false ? 'opacity-60 grayscale cursor-not-allowed' : 'cursor-pointer hover:shadow-2xl'}`}
+        <div className='relative group'>
+          {/* Nút sang trái */}
+          <button 
+            onClick={() => scroll('left')}
+            className='absolute -left-4 top-1/2 -translate-y-1/2 z-10 hidden md:flex items-center justify-center w-12 h-12 bg-white rounded-full shadow-lg border border-gray-100 text-[#135bec] hover:bg-[#135bec] hover:text-white transition-all opacity-0 group-hover:opacity-100'
+          >
+            <span className='material-symbols-outlined text-3xl'>chevron_left</span>
+          </button>
+
+          <div 
+            ref={scrollRef} 
+            onMouseDown={handleMouseDown}
+            onMouseLeave={handleMouseLeave}
+            onMouseUp={handleMouseUp}
+            onMouseMove={handleMouseMove}
+            className={`flex overflow-x-auto gap-6 pb-8 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] ${isDown ? 'cursor-grabbing snap-none select-none' : 'cursor-grab snap-x snap-mandatory'}`}
+          >
+            {courseList.map((p, index) => (
+              <FadeIn
+                key={p.id}
+                delay={index * 150} // Tạo độ trễ tăng dần để thẻ xuất hiện lần lượt
+                className={`w-full md:w-[calc(50%-12px)] lg:w-[calc(33.333333%-16px)] snap-center shrink-0 flex`}
               >
-                <div className='h-64 overflow-hidden relative'>
+                <div 
+                  onClick={(e) => {
+                    if (dragged.current) return // Bỏ qua click nếu người dùng đang thực hiện thao tác kéo
+                    p.isVisible !== false && handleOpen(p.id)
+                  }} 
+                  className={`w-full h-full flex flex-col bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-lg transition-all duration-300 group ${p.isVisible === false ? 'opacity-60 grayscale cursor-not-allowed' : 'cursor-pointer hover:shadow-2xl'}`}
+                >
+                  <div className='h-64 overflow-hidden relative'>
                   {p.id === 'b1-sotudong' && (
                     <div className='absolute top-4 left-4 z-10 bg-[#f97316] text-white text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wide'>
                       Phổ biến nhất
@@ -73,7 +141,12 @@ const Courses = () => {
                       <span className='bg-gray-800 text-white px-4 py-2 rounded-lg font-bold shadow-md'>Tạm ngưng</span>
                     </div>
                   )}
-                  <img src={p.image} className='w-full h-full object-cover transition-transform duration-500 group-hover:scale-110' alt={p.title} />
+                  <img 
+                    src={p.image || undefined} 
+                    draggable="false" 
+                    className='w-full h-full object-cover transition-transform duration-500 group-hover:scale-110' 
+                    alt={p.title} 
+                  />
                 </div>
                 <div className='p-6 flex flex-col flex-1'>
                   <div className='flex justify-between items-start mb-2'>
@@ -105,7 +178,11 @@ const Courses = () => {
                     </div>
 
                     <button 
-                      onClick={(e) => { e.stopPropagation(); p.isVisible !== false && handleOpen(p.id) }} 
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        if (dragged.current) return; // Chặn click nhầm lúc đang kéo
+                        p.isVisible !== false && handleOpen(p.id); 
+                      }} 
                       disabled={p.isVisible === false}
                       className={`rounded-lg font-bold px-4 py-2 transition-colors ${p.isVisible === false ? 'bg-gray-400 text-white cursor-not-allowed' : 'cursor-pointer bg-blue-500 hover:bg-blue-700 text-white hover:text-white text-primary'}`}
                     >
@@ -114,7 +191,17 @@ const Courses = () => {
                   </div>
                 </div>
               </div>
+              </FadeIn>
             ))}
+          </div>
+
+          {/* Nút sang phải */}
+          <button 
+            onClick={() => scroll('right')}
+            className='absolute -right-4 top-1/2 -translate-y-1/2 z-10 hidden md:flex items-center justify-center w-12 h-12 bg-white rounded-full shadow-lg border border-gray-100 text-[#135bec] hover:bg-[#135bec] hover:text-white transition-all opacity-0 group-hover:opacity-100'
+          >
+            <span className='material-symbols-outlined text-3xl'>chevron_right</span>
+          </button>
           </div>
         </div>
       </div>

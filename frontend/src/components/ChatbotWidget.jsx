@@ -56,8 +56,10 @@ const ChatbotWidget = () => {
         
         const isLast = i === botReplies.length - 1;
         let imageUrl = isLast ? data.image : null;
-        if (imageUrl && imageUrl.startsWith('/uploads/')) {
-          imageUrl = `${API_BASE}${imageUrl}`;
+        if (imageUrl) {
+            imageUrl = imageUrl.replace(/\\/g, '/');
+            if (imageUrl.startsWith('uploads/')) imageUrl = '/' + imageUrl;
+            if (imageUrl.startsWith('/uploads/')) imageUrl = `${API_BASE}${imageUrl}`;
         }
         setMessages(prev => [...prev, { sender: 'bot', text: botReplies[i].trim(), link: isLast ? data.link : null, image: imageUrl }]);
         setLoading(false);

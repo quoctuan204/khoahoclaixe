@@ -101,6 +101,29 @@ app.post('/api/upload', protect, (req, res) => {
   });
 });
 
+// --- UPLOAD VIDEO ---
+const videoStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, 'uploads/'),
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'video-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+const videoFileFilter = (req, file, cb) => {
+  const filetypes = /mp4|webm|ogg|mov/;
+  if (filetypes.test(path.extname(file.originalname).toLowerCase())) return cb(null, true);
+  cb(new Error('Chỉ cho phép file video (mp4, webm, ogg, mov)!'), false);
+};
+const uploadVideo = multer({ storage: videoStorage, fileFilter: videoFileFilter, limits: { fileSize: 50 * 1024 * 1024 } }); // Tối đa 50MB
+
+app.post('/api/upload-video', protect, (req, res) => {
+  uploadVideo.single('file')(req, res, (err) => {
+    if (err) return res.status(400).json({ message: err.message || 'Lỗi upload file video' });
+    if (!req.file) return res.status(400).json({ message: 'Chưa chọn file' });
+    res.json({ videoUrl: `/uploads/${req.file.filename}`, fileName: req.file.originalname });
+  });
+});
+
 // --- UPLOAD TÀI LIỆU (PDF, DOCX) ---
 const docStorage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, 'uploads/'),

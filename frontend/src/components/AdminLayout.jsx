@@ -116,6 +116,14 @@ const AdminLayout = () => {
 
             {/* User Dropdown */}
             <div className='relative'>
+            {(() => {
+              let avatarUrl = user?.avatar;
+              if (avatarUrl) {
+                  avatarUrl = avatarUrl.replace(/\\/g, '/');
+                  if (avatarUrl.startsWith('uploads/')) avatarUrl = '/' + avatarUrl;
+                  if (avatarUrl.startsWith('/uploads/')) avatarUrl = `${API_BASE}${avatarUrl}`;
+              }
+              return (
             <button 
               onClick={() => setDropdownOpen(!dropdownOpen)}
               className='flex items-center gap-3 focus:outline-none'
@@ -124,9 +132,9 @@ const AdminLayout = () => {
                 <p className='text-sm font-bold text-gray-900'>{user?.fullName || user?.username || 'Admin'}</p>
                 <p className='text-xs text-gray-500'>Quản trị viên</p>
               </div>
-              {user?.avatar ? (
+              {avatarUrl ? (
                 <img 
-                  src={user.avatar.startsWith('/uploads/') ? `${API_BASE}${user.avatar}` : user.avatar} 
+                  src={avatarUrl} 
                   alt="Avatar" 
                   className='h-10 w-10 rounded-full object-cover border border-blue-200'
                 />
@@ -136,6 +144,8 @@ const AdminLayout = () => {
                 </div>
               )}
             </button>
+            )
+            })()}
 
             {dropdownOpen && (
               <>

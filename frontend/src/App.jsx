@@ -45,6 +45,7 @@ import AdminCourseDetail from './pages/AdminCourseDetail'
 import AdminNews from './pages/AdminNews'
 import AdminNewsDetail from './pages/AdminNewsDetail'
 import AdminBanners from './pages/AdminBanners'
+import AdminSchedule from './pages/AdminSchedule'
 import AdminGallery from './pages/AdminGallery'
 import AdminVideos from './pages/AdminVideos'
 import Settings from './pages/Settings'
@@ -116,6 +117,7 @@ const AppRoutes = () => {
               <Route path='courses' element={<AdminCourses />} />
               <Route path='courses/:id' element={<AdminCourseDetail />} />
               <Route path='banners' element={<AdminBanners />} />
+              <Route path='schedule' element={<AdminSchedule />} />
               <Route path='gallery' element={<AdminGallery />} />
               <Route path='videos' element={<AdminVideos />} />
               <Route path='news' element={<AdminNews />} />

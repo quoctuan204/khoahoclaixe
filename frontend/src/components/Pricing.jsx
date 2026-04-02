@@ -1,18 +1,31 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { assets } from '../assets/assets' 
+import FadeIn from './FadeIn'
+import { products } from '../data/products'
 
 const Pricing = () => {
-  const [courseList, setCourseList] = useState([])
+  const [courseList, setCourseList] = useState(products)
   const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE) || 'http://localhost:5000'
+  const scrollRef = useRef(null)
+  const [isDown, setIsDown] = useState(false)
+  const startX = useRef(0)
+  const scrollLeftPos = useRef(0)
+  const dragged = useRef(false)
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const res = await fetch(`${API_BASE}/api/products`)
         if (res.ok) {
-          const data = await res.json()
-          setCourseList(data.filter(p => p.isVisible !== false))
+          const dbProducts = await res.json()
+          const mergedStatic = products.map(p => {
+            const dbP = dbProducts.find(dp => dp.id === p.id)
+            return dbP ? { ...p, ...dbP } : p
+          })
+          const newFromDb = dbProducts.filter(dp => !products.find(p => p.id === dp.id))
+          const finalCourses = [...mergedStatic, ...newFromDb].filter(p => p.isVisible !== false)
+          setCourseList(finalCourses)
         }
       } catch (error) {
         console.error(error)
@@ -22,6 +35,32 @@ const Pricing = () => {
   }, [API_BASE])
 
   if (courseList.length === 0) return null
+
+  const scroll = (direction) => {
+    if (scrollRef.current && scrollRef.current.children.length > 0) {
+      const itemWidth = scrollRef.current.children[0].offsetWidth + 24 // gap-6 là 24px
+      const scrollAmount = direction === 'left' ? -itemWidth : itemWidth
+      scrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' })
+    }
+  }
+
+  const handleMouseDown = (e) => {
+    setIsDown(true)
+    dragged.current = false
+    if (!scrollRef.current) return
+    startX.current = e.pageX - scrollRef.current.offsetLeft
+    scrollLeftPos.current = scrollRef.current.scrollLeft
+  }
+  const handleMouseLeave = () => setIsDown(false)
+  const handleMouseUp = () => setIsDown(false)
+  const handleMouseMove = (e) => {
+    if (!isDown || !scrollRef.current) return
+    e.preventDefault()
+    const x = e.pageX - scrollRef.current.offsetLeft
+    const walk = (x - startX.current) * 1
+    if (Math.abs(walk) > 10) dragged.current = true
+    scrollRef.current.scrollLeft = scrollLeftPos.current - walk
+  }
 
   return (
     <div className='px-4 py-16 md:px-10 lg:px-20 xl:px-40 flex flex-1 justify-center bg-white dark:bg-[#1a202c]' id='khoa-hoc'>
@@ -40,13 +79,29 @@ const Pricing = () => {
             </p>
         </div>
 
-        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+        <div className='relative group'>
+          <button 
+            onClick={() => scroll('left')}
+            className='absolute -left-4 top-1/2 -translate-y-1/2 z-10 hidden md:flex items-center justify-center w-12 h-12 bg-white rounded-full shadow-lg border border-gray-100 text-[#135bec] hover:bg-[#135bec] hover:text-white transition-all opacity-0 group-hover:opacity-100'
+          >
+            <span className='material-symbols-outlined text-3xl'>chevron_left</span>
+          </button>
+
+          <div 
+            ref={scrollRef}
+            onMouseDown={handleMouseDown}
+            onMouseLeave={handleMouseLeave}
+            onMouseUp={handleMouseUp}
+            onMouseMove={handleMouseMove}
+            className={`flex overflow-x-auto gap-6 pb-8 pt-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] ${isDown ? 'cursor-grabbing snap-none select-none' : 'cursor-grab snap-x snap-mandatory'}`}
+          >
           {courseList.map((product, index) => {
             // Logic để highlight card giữa hoặc card B2
             const isHighlight = product.id.includes('b2') || index === 1
             
             return (
-              <div key={product.id} className={`relative flex flex-col gap-6 rounded-2xl border-2 ${isHighlight ? 'border-[#135bec] shadow-2xl z-20 transform lg:-translate-y-4' : 'border-gray-200 shadow-sm hover:shadow-xl'} bg-white dark:bg-[#232b3a] p-8 transition-all`}>
+              <FadeIn key={product.id} delay={index * 150} className='w-full md:w-[calc(50%-12px)] lg:w-[calc(33.333333%-16px)] snap-center shrink-0 flex'>
+                <div className={`w-full relative flex flex-col gap-6 rounded-2xl border-2 ${isHighlight ? 'border-[#135bec] shadow-2xl z-20 transform lg:-translate-y-4' : 'border-gray-200 shadow-sm hover:shadow-xl'} bg-white dark:bg-[#232b3a] p-8 transition-all`}>
                   {isHighlight && (
                     <div className='absolute -top-3 left-1/2 -translate-x-1/2 bg-[#f97316] text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide shadow-sm'>
                         Phổ biến nhất
@@ -66,6 +121,7 @@ const Pricing = () => {
                   <Link 
                     to='/dangkykhoahoc' 
                     state={{ course: product.id, courseName: product.title, imageKey: product.image }} 
+                    onClick={(e) => { if (dragged.current) e.preventDefault() }}
                     className={`w-full cursor-pointer rounded-lg h-12 text-white text-base font-bold transition-colors shadow-lg flex items-center justify-center ${isHighlight ? 'bg-[#f97316] hover:bg-orange-600' : 'bg-[#135bec] hover:bg-blue-700'}`}
                   >
                       Đăng ký ngay
@@ -83,8 +139,16 @@ const Pricing = () => {
                       )}
                   </div>
               </div>
+              </FadeIn>
             )
           })}
+          </div>
+          <button 
+            onClick={() => scroll('right')}
+            className='absolute -right-4 top-1/2 -translate-y-1/2 z-10 hidden md:flex items-center justify-center w-12 h-12 bg-white rounded-full shadow-lg border border-gray-100 text-[#135bec] hover:bg-[#135bec] hover:text-white transition-all opacity-0 group-hover:opacity-100'
+          >
+            <span className='material-symbols-outlined text-3xl'>chevron_right</span>
+          </button>
         </div>
       </div>
     </div>

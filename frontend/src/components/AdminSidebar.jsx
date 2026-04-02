@@ -10,6 +10,7 @@ const AdminSidebar = ({ isOpen, onClose }) => {
     { path: '/admin/contacts', icon: 'contact_phone', label: 'Yêu cầu tư vấn' },
     // Bạn có thể thêm link tới danh sách khóa học nếu muốn quản lý tập trung
     { path: '/admin/courses', icon: 'school', label: 'Quản lý Khóa học' }, 
+    { path: '/admin/schedule', icon: 'calendar_month', label: 'Lịch giảng dạy' },
     { path: '/admin/banners', icon: 'view_carousel', label: 'Quản lý Banner' },
     { path: '/admin/gallery', icon: 'photo_library', label: 'Thư viện ảnh' },
     { path: '/admin/videos', icon: 'smart_display', label: 'Quản lý Video' },

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { assets } from '../assets/assets' 
+import { products } from '../data/products'
 
 const HeroCourse = () => {
   const [slides, setSlides] = useState([])
@@ -12,14 +13,29 @@ const HeroCourse = () => {
       try {
         const res = await fetch(`${API_BASE}/api/products`)
         if (res.ok) {
-          const data = await res.json()
-          const validProducts = data.filter(p => p.isVisible !== false)
-          const newSlides = validProducts.map(p => ({
-            key: p.id,
-            img: (p.image && p.image.startsWith('/uploads/')) ? `${API_BASE}${p.image}` : (p.image || assets.b1sotudong),
-            title: p.title,
-            productId: p.id
-          }))
+          const dbProducts = await res.json()
+          
+          const mergedStatic = products.map(p => {
+            const dbP = dbProducts.find(dp => dp.id === p.id)
+            return dbP ? { ...p, ...dbP } : p
+          })
+          const newFromDb = dbProducts.filter(dp => !products.find(p => p.id === dp.id))
+          
+          const validProducts = [...mergedStatic, ...newFromDb].filter(p => p.isVisible !== false)
+          const newSlides = validProducts.map(p => {
+            let imgUrl = p.image;
+            if (imgUrl) {
+                imgUrl = imgUrl.replace(/\\/g, '/');
+                if (imgUrl.startsWith('uploads/')) imgUrl = '/' + imgUrl;
+                if (imgUrl.startsWith('/uploads/')) imgUrl = `${API_BASE}${imgUrl}`;
+            }
+            return {
+              key: p.id,
+              img: imgUrl || assets.b1sotudong,
+              title: p.title,
+              productId: p.id
+            };
+          })
           setSlides(newSlides.length > 0 ? newSlides : [])
         }
       } catch (error) {

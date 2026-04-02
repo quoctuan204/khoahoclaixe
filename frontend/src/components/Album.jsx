@@ -14,10 +14,15 @@ const Album = () => {
         if (res.ok) {
           const data = await res.json()
           // Lấy 4 ảnh mới nhất
-          setImages(data.slice(0, 4).map(img => ({
-            ...img,
-            image: img.image.startsWith('/uploads/') ? `${API_BASE}${img.image}` : img.image
-          })))
+          setImages(data.slice(0, 4).map(img => {
+            let imgUrl = img.image;
+            if (imgUrl) {
+                imgUrl = imgUrl.replace(/\\/g, '/');
+                if (imgUrl.startsWith('uploads/')) imgUrl = '/' + imgUrl;
+                if (imgUrl.startsWith('/uploads/')) imgUrl = `${API_BASE}${imgUrl}`;
+            }
+            return { ...img, image: imgUrl };
+          }))
         }
       } catch (error) { console.error(error) }
     }

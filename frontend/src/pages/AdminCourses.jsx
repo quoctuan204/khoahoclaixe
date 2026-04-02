@@ -129,7 +129,7 @@ const AdminCourses = () => {
               {courses.map((product) => (
                 <tr key={product.id} className='hover:bg-gray-50 transition-colors'>
                   <td className='px-6 py-4 whitespace-nowrap'>
-                    <img src={product.image} alt={product.title} className='h-12 w-20 object-cover rounded-md border border-gray-200' />
+                    <img src={product.image || undefined} alt={product.title} className='h-12 w-20 object-cover rounded-md border border-gray-200' />
                   </td>
                   <td className='px-6 py-4 whitespace-nowrap'>
                     <div className='text-sm font-bold text-gray-900'>{product.title}</div>

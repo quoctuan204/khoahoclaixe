@@ -32,10 +32,15 @@ const Hero = () => {
             if (res.ok) {
                 const data = await res.json()
                 if (data.length > 0) {
-                    const processed = data.map(b => ({
-                        ...b,
-                        image: b.image.startsWith('/uploads/') ? `${API_BASE}${b.image}` : b.image
-                    }))
+                    const processed = data.map(b => {
+                        let imgUrl = b.image;
+                        if (imgUrl) {
+                            imgUrl = imgUrl.replace(/\\/g, '/');
+                            if (imgUrl.startsWith('uploads/')) imgUrl = '/' + imgUrl;
+                            if (imgUrl.startsWith('/uploads/')) imgUrl = `${API_BASE}${imgUrl}`;
+                        }
+                        return { ...b, image: imgUrl };
+                    })
                     setSlides(processed)
                 } else {
                     setSlides(defaultSlides)

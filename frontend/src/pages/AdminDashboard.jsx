@@ -312,7 +312,7 @@ const AdminDashboard = () => {
           <div className='bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex flex-col items-center'>
             <h3 className='text-gray-900 font-bold mb-2 w-full text-left'>Tỷ lệ xử lý</h3>
             <div className='h-[200px] w-full'>
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                 <PieChart>
                   <Pie
                     data={pieData}
@@ -337,7 +337,7 @@ const AdminDashboard = () => {
           <div className='lg:col-span-2 bg-white p-6 rounded-lg shadow-sm border border-gray-200'>
             <h3 className='text-gray-900 font-bold mb-6'>Thống kê theo khóa học</h3>
             <div className='h-[250px] w-full'>
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                 <BarChart data={stats} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
                   <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12 }} dy={10} />

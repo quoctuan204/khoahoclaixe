@@ -151,7 +151,7 @@ const AdminGallery = () => {
         <div className='grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4'>
           {images.map(img => (
             <div key={img._id} className='group relative aspect-square bg-gray-100 rounded-lg overflow-hidden border border-gray-200'>
-              <img src={img.image} alt={img.title} className='w-full h-full object-cover' />
+              <img src={img.image || undefined} alt={img.title} className='w-full h-full object-cover' />
               <div className='absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-3'>
                  <span className='text-white text-xs font-bold bg-blue-600 px-2 py-1 rounded w-fit'>{img.type}</span>
                  {role !== 'staff' && (
