@@ -146,9 +146,9 @@ const AdminVideos = () => {
           {videos.map(video => (
             <div key={video._id} className='bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden group'>
               <div className='relative aspect-video'>
-                {video.videoId && video.videoId.includes('/uploads/') ? (
+                {video.videoId && (video.videoId.includes('/uploads/') || video.videoId.startsWith('http')) ? (
                   <video 
-                    src={`${API_BASE}${video.videoId}`} 
+                    src={video.videoId.startsWith('http') ? video.videoId : `${API_BASE}${video.videoId}`} 
                     controls
                     className='w-full h-full object-cover bg-black'
                   />

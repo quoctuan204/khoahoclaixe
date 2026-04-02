@@ -157,7 +157,7 @@ const AdminCourseDetail = () => {
         })
         const uploadJson = await uploadRes.json()
         if (uploadJson.imageUrl) {
-          finalImage = `${API_BASE}${uploadJson.imageUrl}`
+          finalImage = uploadJson.imageUrl.startsWith('http') ? uploadJson.imageUrl : `${API_BASE}${uploadJson.imageUrl}`
         }
       }
 
