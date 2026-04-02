@@ -84,6 +84,10 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // SECURITY: Added 'protect' middleware to prevent unauthorized uploads
 app.post('/api/upload', protect, (req, res) => {
   upload.single('image')(req, res, (err) => {
+    // Debug log để kiểm tra lỗi 400 Bad Request
+    if (err) console.log("UPLOAD ERROR:", err.message);
+    console.log("FILE RECEIVED:", req.file);
+
     if (err) return res.status(400).json({ message: err.message || 'Lỗi upload file' });
     if (!req.file) return res.status(400).json({ message: 'Chưa chọn file' });
     // Cloudinary trả về đường dẫn URL an toàn trực tiếp
