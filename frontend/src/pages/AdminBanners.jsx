@@ -8,7 +8,7 @@ const AdminBanners = () => {
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
   const { token } = useAuth()
-  const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE) || 'http://localhost:5000'
+  const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) || 'https://khoahoclaixe.onrender.com'
 
   const [imageFiles, setImageFiles] = useState([])
   const [previews, setPreviews] = useState([])

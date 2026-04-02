@@ -4,7 +4,7 @@ import FadeIn from '../components/FadeIn'
 
 const DownloadForms = () => {
   const [forms, setForms] = useState(null)
-  const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE) || 'http://localhost:5000'
+  const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) || 'https://khoahoclaixe.onrender.com'
 
   useEffect(() => {
     fetch(`${API_BASE}/api/forms`).then(res => res.json()).then(data => setForms(data)).catch(err => console.error(err))

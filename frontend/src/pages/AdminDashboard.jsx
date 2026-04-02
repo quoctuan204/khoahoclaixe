@@ -16,7 +16,7 @@ const AdminDashboard = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage] = useState(10)
   const { token, role } = useAuth()
-  const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE) || 'http://localhost:5000'
+  const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) || 'https://khoahoclaixe.onrender.com'
   const navigate = useNavigate()
   
   const [showPasswordModal, setShowPasswordModal] = useState(false)
@@ -43,7 +43,7 @@ const AdminDashboard = () => {
         }
       } catch (error) {
         console.error('Error:', error)
-        setError('Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại Backend (Port 5000).')
+        setError('Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại kết nối mạng.')
       } finally {
         setLoading(false)
       }

@@ -6,7 +6,7 @@ import { products } from '../data/products'
 
 const MainPricing = () => {
   const [courseList, setCourseList] = useState(products)
-  const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE) || 'http://localhost:5000'
+  const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) || 'https://khoahoclaixe.onrender.com'
   const scrollRef = useRef(null)
   const [isDown, setIsDown] = useState(false)
   const startX = useRef(0)

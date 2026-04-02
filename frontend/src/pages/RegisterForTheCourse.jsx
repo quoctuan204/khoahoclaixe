@@ -26,7 +26,7 @@ const RegisterForTheCourse = () => {
   const [selectedCourse, setSelectedCourse] = useState('')
   const [selectedCourseName, setSelectedCourseName] = useState('')
   const [imageSrc, setImageSrc] = useState(assets.b1sotudong)
-  const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE) || 'http://localhost:5000'
+  const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) || 'https://khoahoclaixe.onrender.com'
   const [products, setProducts] = useState([])
   const [formData, setFormData] = useState({
     firstName: '',
