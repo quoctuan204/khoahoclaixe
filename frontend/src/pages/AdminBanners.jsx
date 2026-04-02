@@ -241,7 +241,7 @@ const AdminBanners = () => {
               </div>
               <button 
                 onClick={() => handleDelete(banner._id)} 
-                className='absolute top-4 right-4 bg-red-600 text-white p-2 rounded-full hover:bg-red-700 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity'
+                className='absolute top-4 right-4 bg-red-600 text-white p-2 rounded-full hover:bg-red-700 shadow-lg transition-opacity'
                 title="Xóa banner"
               >
                 <span className="material-symbols-outlined text-sm">delete</span>
