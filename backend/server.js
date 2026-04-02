@@ -29,11 +29,9 @@ app.use(helmet({
 // 2. SECURITY: CORS (Chỉ cho phép Frontend gọi API)
 app.use(cors({
   origin: (origin, callback) => {
-    // Cho phép request không có origin (như mobile app, curl) hoặc từ localhost
-    if (!origin || origin.includes('localhost') || origin.includes('127.0.0.1')) {
-      return callback(null, true);
-    }
-    callback(new Error('Not allowed by CORS'));
+    // Tạm thời cho phép TẤT CẢ các domain gọi API để không bị lỗi CORS khi deploy Frontend lên Render/Vercel/Netlify.
+    // (Để bảo mật hơn sau này, bạn có thể kiểm tra danh sách domain tĩnh tại đây)
+    callback(null, true);
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
