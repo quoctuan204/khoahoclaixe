@@ -132,7 +132,8 @@ const AdminBanners = () => {
     try {
       const res = await fetch(`${API_BASE}/api/banners/${id}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: 'Admin xóa trực tiếp' })
       })
       if (res.ok) {
         setBanners(prev => prev.filter(b => b._id !== id))
