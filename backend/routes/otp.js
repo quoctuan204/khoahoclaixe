@@ -61,10 +61,12 @@ app.post("/api/verify-otp", async (req, res) => {
   }
 });
 
-await fetch("http://localhost:5000/api/send-otp", {
+/* Test gọi API (Đã comment lại để tránh lỗi chạy tự động)
+fetch("https://khoahoclaixe.onrender.com/api/send-otp", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
     phone: "+840349292958"
   })
 });
+*/
