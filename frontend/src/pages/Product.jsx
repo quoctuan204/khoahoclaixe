@@ -121,7 +121,7 @@ const Product = () => {
         if (imageFile) {
           const formData = new FormData()
           formData.append('image', imageFile)
-          const uploadRes = await fetch(`${API_BASE}/api/upload`, { method: 'POST', body: formData })
+          const uploadRes = await fetch(`${API_BASE}/api/upload`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData })
           const uploadJson = await uploadRes.json()
           if (uploadJson.imageUrl) {
             finalImage = uploadJson.imageUrl.startsWith('http') ? uploadJson.imageUrl : `${API_BASE}${uploadJson.imageUrl}`
