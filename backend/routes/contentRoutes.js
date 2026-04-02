@@ -206,5 +206,26 @@ router.get('/banners', async (req, res) => {
   }
 });
 
-// Các route POST/DELETE banner tương tự... (đã rút gọn để tiết kiệm không gian, nhưng logic giống trên)
+router.post('/banners', protect, checkPermission(PERMISSIONS.MANAGE_CONTENT), async (req, res) => {
+  try {
+    const newBanner = new Banner(req.body);
+    await newBanner.save();
+    await logActivity(req, 'CREATE', 'Banner', newBanner._id, `Added banner: ${newBanner.title}`);
+    res.status(201).json(newBanner);
+  } catch (error) {
+    res.status(500).json({ message: 'Error adding banner' });
+  }
+});
+
+router.delete('/banners/:id', protect, checkPermission(PERMISSIONS.MANAGE_CONTENT), async (req, res) => {
+  try {
+    const banner = await Banner.findByIdAndDelete(req.params.id);
+    const reason = req.body.reason || 'Không có lý do';
+    await logActivity(req, 'DELETE', banner ? banner.title || 'Banner' : 'Banner', req.params.id, `Lý do: ${reason}`);
+    res.json({ message: 'Banner deleted' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting banner' });
+  }
+});
+
 module.exports = router;
