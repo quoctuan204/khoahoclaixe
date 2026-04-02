@@ -87,7 +87,11 @@ const AdminBanners = () => {
           body: uploadData
         })
         
-        if (!uploadRes.ok) continue
+        if (!uploadRes.ok) {
+          const errData = await uploadRes.json().catch(() => ({}));
+          throw new Error(errData.message || 'Lỗi tải ảnh lên server');
+        }
+        
         const uploadJson = await uploadRes.json()
         if (!uploadJson.imageUrl) continue
 
@@ -120,7 +124,7 @@ const AdminBanners = () => {
       }
     } catch (error) {
       console.error(error)
-      toast.error('Có lỗi xảy ra')
+      toast.error(error.message || 'Có lỗi xảy ra')
     } finally {
       setUploading(false)
     }

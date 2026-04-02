@@ -59,6 +59,10 @@ const AdminGallery = () => {
       })
       const uploadJson = await uploadRes.json()
       
+      if (!uploadRes.ok) {
+        throw new Error(uploadJson.message || 'Tải ảnh lên thất bại')
+      }
+      
       if (!uploadJson.imageUrl) throw new Error('Upload failed')
 
       // 2. Save to Gallery DB
@@ -86,7 +90,7 @@ const AdminGallery = () => {
       }
     } catch (error) {
       console.error(error)
-      toast.error('Có lỗi xảy ra')
+      toast.error(error.message || 'Có lỗi xảy ra')
     } finally {
       setUploading(false)
     }
