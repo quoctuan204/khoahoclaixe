@@ -8,7 +8,7 @@ const Courses = () => {
   const navigate = useNavigate();
   const handleOpen = (id) => navigate(`/product/${id}`)
   const [courseList, setCourseList] = useState(products)
-  const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE) || 'http://localhost:5000'
+  const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) || 'https://khoahoclaixe.onrender.com'
   const scrollRef = useRef(null)
   
   // Trạng thái cho tính năng kéo vuốt bằng chuột

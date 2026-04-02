@@ -5,7 +5,7 @@ import SmartLink from './SmartLink'
 const Hero = () => {
   const [slides, setSlides] = useState([])
   const [currentIndex, setCurrentIndex] = useState(0);
-  const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE) || 'http://localhost:5000'
+  const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) || 'https://khoahoclaixe.onrender.com'
 
   // Dữ liệu mặc định nếu chưa có banner
   const defaultSlides = [
