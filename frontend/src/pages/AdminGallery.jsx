@@ -49,6 +49,7 @@ const AdminGallery = () => {
       
       const uploadRes = await fetch(`${API_BASE}/api/upload`, {
         method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
         body: uploadData
       })
       const uploadJson = await uploadRes.json()
