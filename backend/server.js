@@ -56,21 +56,23 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir);
 }
 
-// Configure Cloudinary
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
-});
-
-// Configure Multer Storage for Cloudinary
-const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: {
-    folder: 'khoahoclaixe', // Tạo thư mục riêng trên Cloudinary
-    allowed_formats: ['jpeg', 'jpg', 'png', 'gif', 'webp']
-  },
-});
+let storage;
+if (process.env.CLOUDINARY_CLOUD_NAME) {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+  });
+  storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: { folder: 'khoahoclaixe', allowed_formats: ['jpeg', 'jpg', 'png', 'gif', 'webp'] }
+  });
+} else {
+  storage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, 'uploads/'),
+    filename: (req, file, cb) => cb(null, Date.now() + '-' + Math.round(Math.random() * 1E9) + path.extname(file.originalname))
+  });
+}
 
 const upload = multer({ 
   storage: storage,
@@ -90,52 +92,63 @@ app.post('/api/upload', protect, (req, res) => {
 
     if (err) return res.status(400).json({ message: err.message || 'Lỗi upload file' });
     if (!req.file) return res.status(400).json({ message: 'Chưa chọn file' });
-    // Cloudinary trả về đường dẫn URL an toàn trực tiếp
-    const imageUrl = req.file.path;
+    
+    // Hỗ trợ đồng thời cả Local Disk và Cloudinary
+    const imageUrl = req.file.filename ? `/uploads/${req.file.filename}` : req.file.path;
     res.json({ imageUrl });
   });
 });
 
 // --- UPLOAD VIDEO ---
-const videoCloudinaryStorage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: {
-    folder: 'khoahoclaixe_videos', // Lưu vào thư mục riêng
-    resource_type: 'video', // Bắt buộc phải có để upload video/audio lên Cloudinary
-    allowed_formats: ['mp4', 'webm', 'ogg', 'mov']
-  }
-});
-
-const uploadVideo = multer({ storage: videoCloudinaryStorage, limits: { fileSize: 50 * 1024 * 1024 } }); // Tối đa 50MB
+let videoStorage;
+if (process.env.CLOUDINARY_CLOUD_NAME) {
+  videoStorage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: { folder: 'khoahoclaixe_videos', resource_type: 'video', allowed_formats: ['mp4', 'webm', 'ogg', 'mov'] }
+  });
+} else {
+  videoStorage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, 'uploads/'),
+    filename: (req, file, cb) => cb(null, 'video-' + Date.now() + path.extname(file.originalname))
+  });
+}
+const uploadVideo = multer({ storage: videoStorage, limits: { fileSize: 50 * 1024 * 1024 } });
 
 app.post('/api/upload-video', protect, (req, res) => {
   uploadVideo.single('file')(req, res, (err) => {
     if (err) return res.status(400).json({ message: err.message || 'Lỗi upload file video' });
     if (!req.file) return res.status(400).json({ message: 'Chưa chọn file' });
-    res.json({ videoUrl: req.file.path, fileName: req.file.originalname });
+    const videoUrl = req.file.filename ? `/uploads/${req.file.filename}` : req.file.path;
+    res.json({ videoUrl, fileName: req.file.originalname });
   });
 });
 
 // --- UPLOAD TÀI LIỆU (PDF, DOCX) ---
-const docCloudinaryStorage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: {
-    folder: 'khoahoclaixe_docs', // Tạo thư mục riêng cho tài liệu
-    resource_type: 'raw', // Bắt buộc dùng 'raw' để lưu các file không phải ảnh/video (pdf, docx...)
-  }
-});
+let docStorage;
+if (process.env.CLOUDINARY_CLOUD_NAME) {
+  docStorage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: { folder: 'khoahoclaixe_docs', resource_type: 'raw' }
+  });
+} else {
+  docStorage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, 'uploads/'),
+    filename: (req, file, cb) => cb(null, 'doc-' + Date.now() + path.extname(file.originalname))
+  });
+}
 const docFileFilter = (req, file, cb) => {
   const filetypes = /pdf|doc|docx/;
   if (filetypes.test(path.extname(file.originalname).toLowerCase())) return cb(null, true);
   cb(new Error('Chỉ cho phép file tài liệu (pdf, doc, docx)!'), false);
 };
-const uploadDoc = multer({ storage: docCloudinaryStorage, fileFilter: docFileFilter, limits: { fileSize: 10 * 1024 * 1024 } }); // Tối đa 10MB
+const uploadDoc = multer({ storage: docStorage, fileFilter: docFileFilter, limits: { fileSize: 10 * 1024 * 1024 } });
 
 app.post('/api/upload-doc', protect, (req, res) => {
   uploadDoc.single('file')(req, res, (err) => {
     if (err) return res.status(400).json({ message: err.message || 'Lỗi upload file' });
     if (!req.file) return res.status(400).json({ message: 'Chưa chọn file' });
-    res.json({ fileUrl: req.file.path, fileName: req.file.originalname });
+    const fileUrl = req.file.filename ? `/uploads/${req.file.filename}` : req.file.path;
+    res.json({ fileUrl, fileName: req.file.originalname });
   });
 });
 
