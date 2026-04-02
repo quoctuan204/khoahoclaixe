@@ -217,6 +217,16 @@ router.post('/banners', protect, checkPermission(PERMISSIONS.MANAGE_CONTENT), as
   }
 });
 
+router.put('/banners/:id', protect, checkPermission(PERMISSIONS.MANAGE_CONTENT), async (req, res) => {
+  try {
+    const banner = await Banner.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    await logActivity(req, 'UPDATE', 'Banner', req.params.id, `Updated banner: ${banner.title}`);
+    res.json(banner);
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating banner' });
+  }
+});
+
 router.delete('/banners/:id', protect, checkPermission(PERMISSIONS.MANAGE_CONTENT), async (req, res) => {
   try {
     const banner = await Banner.findByIdAndDelete(req.params.id);
