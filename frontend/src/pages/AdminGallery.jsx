@@ -24,10 +24,15 @@ const AdminGallery = () => {
       const res = await fetch(`${API_BASE}/api/gallery`)
       if (res.ok) {
         const data = await res.json()
-        const processed = data.map(item => ({
-            ...item,
-            image: item.image.startsWith('/uploads/') ? `${API_BASE}${item.image}` : item.image
-        }))
+        const processed = data.map(item => {
+            let imgUrl = item.image;
+            if (imgUrl) {
+                imgUrl = imgUrl.replace(/\\/g, '/');
+                if (imgUrl.startsWith('uploads/')) imgUrl = '/' + imgUrl;
+                if (imgUrl.startsWith('/uploads/')) imgUrl = `${API_BASE}${imgUrl}`;
+            }
+            return { ...item, image: imgUrl };
+        })
         setImages(processed)
       }
     } catch (error) {
