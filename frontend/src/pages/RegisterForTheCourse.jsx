@@ -162,8 +162,6 @@ const RegisterForTheCourse = () => {
           lastName: '',
           phone: '',
           email: '',
-          dob: '',
-          gender: '',
           course: '',
           cccd: '',
           address: '',
@@ -394,7 +392,8 @@ const RegisterForTheCourse = () => {
                             <div className='relative'>
                                 <select 
                                     className='w-full appearance-none rounded-lg border-[#dbdfe6] dark:border-[#2a3441] bg-white dark:bg-[#101622]/50 text-[#111318] dark:text-white shadow-sm focus:border-[#135bec] focus:ring-[#135bec] h-14 px-4 pr-10' 
-                                    id="course" value={selectedCourse} onChange={handleCourseChange}>
+                                    id="course" value={selectedCourse} onChange={handleCourseChange}
+                                    required>
                                         <option disabled value="">Vui lòng chọn khóa học...</option>
                                         {products.map(p => (
                                             <option key={p.id} value={p.id}>{p.title}</option>
