@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
+import { useAuth } from '../context/AuthContext'
 
 const StudentDetail = () => {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { token } = useAuth()
   const [loading, setLoading] = useState(true)
   const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) || 'https://khoahoclaixe.onrender.com'
   const [formData, setFormData] = useState({
@@ -21,7 +23,9 @@ const StudentDetail = () => {
   useEffect(() => {
     const fetchStudent = async () => {
       try {
-        const response = await fetch(`${API_BASE}/api/registrations/${id}`)
+        const response = await fetch(`${API_BASE}/api/registrations/${id}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
         if (response.ok) {
           const data = await response.json()
           setFormData(data)
