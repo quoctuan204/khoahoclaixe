@@ -74,7 +74,7 @@ const AppRoutes = () => {
   const [maintenanceMode, setMaintenanceMode] = useState(false)
   const [loadingSettings, setLoadingSettings] = useState(true)
   const location = useLocation()
-  const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE) || 'http://localhost:5000'
+  const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) || 'https://khoahoclaixe.onrender.com'
 
   useEffect(() => {
     fetch(`${API_BASE}/api/settings`)
