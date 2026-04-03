@@ -99,7 +99,8 @@ const RegisterForTheCourse = () => {
     const w = wards.find(item => item.id === selectedWard)?.full_name || ''
     
     if (p) {
-      setFormData(prev => ({ ...prev, address: { province: p, district: d, ward: w } }))
+      const fullAddress = [w, d, p].filter(Boolean).join(', ')
+      setFormData(prev => ({ ...prev, address: fullAddress }))
     }
   }, [selectedProvince, selectedDistrict, selectedWard, provinces, districts, wards])
 
