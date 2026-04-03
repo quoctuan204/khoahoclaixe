@@ -155,11 +155,10 @@ const AdminCourseDetail = () => {
           headers: { 'Authorization': `Bearer ${token}` },
           body: data 
         })
+        const uploadJson = await uploadRes.json().catch(() => ({}));
         if (!uploadRes.ok) {
-          const errData = await uploadRes.json().catch(() => ({}));
-          throw new Error(errData.message || 'Lỗi tải ảnh lên server');
+          throw new Error(uploadJson.message || 'Lỗi tải ảnh lên server');
         }
-        const uploadJson = await uploadRes.json()
         if (uploadJson.imageUrl) {
           finalImage = uploadJson.imageUrl.startsWith('http') ? uploadJson.imageUrl : `${API_BASE}${uploadJson.imageUrl}`
         }

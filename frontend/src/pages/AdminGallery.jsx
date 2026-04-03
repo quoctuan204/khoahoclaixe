@@ -57,7 +57,7 @@ const AdminGallery = () => {
         headers: { 'Authorization': `Bearer ${token}` },
         body: uploadData
       })
-      const uploadJson = await uploadRes.json()
+      const uploadJson = await uploadRes.json().catch(() => ({}))
       
       if (!uploadRes.ok) {
         throw new Error(uploadJson.message || 'Tải ảnh lên thất bại')

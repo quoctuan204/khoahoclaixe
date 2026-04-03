@@ -85,7 +85,7 @@ const AdminProfile = () => {
           headers: { 'Authorization': `Bearer ${token}` },
           body: uploadData
         })
-        const uploadResult = await uploadRes.json()
+        const uploadResult = await uploadRes.json().catch(() => ({}))
         if (!uploadRes.ok) throw new Error(uploadResult.message || 'Tải ảnh lên thất bại')
         avatarUrl = uploadResult.imageUrl // This is a relative path like /uploads/filename.jpg
       }

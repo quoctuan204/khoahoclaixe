@@ -54,15 +54,30 @@ const AdminBanners = () => {
     }
   }
 
+  const validateFile = (file) => {
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+    if (!validTypes.includes(file.type)) {
+      toast.error(`File ${file.name} không hợp lệ. Vui lòng chọn ảnh.`)
+      return false
+    }
+    if (file.size > 5 * 1024 * 1024) { // 5MB
+      toast.error(`Ảnh ${file.name} quá lớn (tối đa 5MB).`)
+      return false
+    }
+    return true
+  }
+
   const handleFileSelect = (e) => {
     const files = Array.from(e.target.files)
-    if (files.length > 0) {
+    const validFiles = files.filter(validateFile)
+    
+    if (validFiles.length > 0) {
       if (editingId) {
-        setImageFiles([files[0]])
-        setPreviews([URL.createObjectURL(files[0])])
+        setImageFiles([validFiles[0]])
+        setPreviews([URL.createObjectURL(validFiles[0])])
       } else {
-        setImageFiles(prev => [...prev, ...files]) // Cộng dồn ảnh mới vào danh sách cũ
-        const newPreviews = files.map(file => URL.createObjectURL(file))
+        setImageFiles(prev => [...prev, ...validFiles]) // Cộng dồn ảnh mới vào danh sách cũ
+        const newPreviews = validFiles.map(file => URL.createObjectURL(file))
         setPreviews(prev => [...prev, ...newPreviews])
       }
     }
@@ -100,31 +115,41 @@ const AdminBanners = () => {
     setPreviews([])
   }
 
+  // Tách hàm upload riêng biệt để đảm bảo ảnh upload xong mới save (Bước 1)
+  const uploadImage = async (file) => {
+    const uploadData = new FormData()
+    uploadData.append('image', file)
+    
+    const uploadRes = await fetch(`${API_BASE}/api/upload`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` },
+      body: uploadData
+    })
+    
+    const resData = await uploadRes.json().catch(() => ({}))
+    if (!uploadRes.ok) {
+      throw new Error(resData.message || 'Lỗi tải ảnh lên server')
+    }
+    
+    return resData.imageUrl || resData.url // Lấy đúng field url từ response
+  }
+
   const handleSave = async () => {
     if (!editingId && imageFiles.length === 0) return toast.error('Vui lòng chọn ít nhất 1 ảnh')
     setUploading(true)
     try {
       if (editingId) {
+        // Bước 2: Save
         let finalImage = existingImage;
         if (imageFiles.length > 0) {
-          const uploadData = new FormData()
-          uploadData.append('image', imageFiles[0])
-          const uploadRes = await fetch(`${API_BASE}/api/upload`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}` },
-            body: uploadData
-          })
-          if (!uploadRes.ok) {
-            const errData = await uploadRes.json().catch(() => ({}));
-            throw new Error(errData.message || 'Lỗi tải ảnh lên server');
-          }
-          const uploadJson = await uploadRes.json()
-          if (uploadJson.imageUrl) finalImage = uploadJson.imageUrl
+          const uploadedUrl = await uploadImage(imageFiles[0])
+          if (uploadedUrl) finalImage = uploadedUrl
         }
 
         const bannerData = {
           ...formData,
-          image: finalImage ? finalImage.replace(API_BASE, '') : ''
+          // Giữ lại ảnh cũ nếu không update, tránh bị ghi đè mất ảnh
+          image: finalImage ? finalImage.replace(API_BASE, '') : existingImage
         }
 
         const saveRes = await fetch(`${API_BASE}/api/banners/${editingId}`, {
@@ -146,26 +171,12 @@ const AdminBanners = () => {
       } else {
         let successCount = 0
         for (const file of imageFiles) {
-          const uploadData = new FormData()
-          uploadData.append('image', file)
-          
-          const uploadRes = await fetch(`${API_BASE}/api/upload`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}` },
-            body: uploadData
-          })
-          
-          if (!uploadRes.ok) {
-            const errData = await uploadRes.json().catch(() => ({}));
-            throw new Error(errData.message || 'Lỗi tải ảnh lên server');
-          }
-          
-          const uploadJson = await uploadRes.json()
-          if (!uploadJson.imageUrl) continue
+          const uploadedUrl = await uploadImage(file)
+          if (!uploadedUrl) continue
 
           const bannerData = {
             ...formData,
-            image: uploadJson.imageUrl.replace(API_BASE, '')
+            image: uploadedUrl.replace(API_BASE, '')
           }
 
           const saveRes = await fetch(`${API_BASE}/api/banners`, {

@@ -47,7 +47,7 @@ const AdminVideos = () => {
         headers: { 'Authorization': `Bearer ${token}` }, 
         body: fData 
       })
-      const uploadJson = await uploadRes.json()
+      const uploadJson = await uploadRes.json().catch(() => ({}))
       
       if (!uploadRes.ok) {
         setUploading(false)
