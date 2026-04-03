@@ -18,8 +18,8 @@ const AdminContacts = () => {
   const [sourceFilter, setSourceFilter] = useState('all')
 
   useEffect(() => {
-    fetchContacts()
-  }, [])
+    if (token) fetchContacts()
+  }, [token])
 
   const fetchContacts = async () => {
     try {

@@ -31,6 +31,7 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     const fetchRegistrations = async () => {
+      if (!token) return; // Chờ token load xong mới gọi API
       try {
         const response = await fetch(`${API_BASE}/api/registrations`, {
           headers: { 'Authorization': `Bearer ${token}` }
@@ -50,7 +51,7 @@ const AdminDashboard = () => {
     }
 
     fetchRegistrations()
-  }, [API_BASE])
+  }, [API_BASE, token])
 
   // Reset về trang 1 khi tìm kiếm
   useEffect(() => {

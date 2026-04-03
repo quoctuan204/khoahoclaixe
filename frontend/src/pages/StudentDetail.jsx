@@ -21,6 +21,7 @@ const StudentDetail = () => {
   })
 
   useEffect(() => {
+    if (!token) return; // Chờ token load xong từ LocalStorage mới gọi API
     const fetchStudent = async () => {
       try {
         const response = await fetch(`${API_BASE}/api/registrations/${id}`, {
@@ -40,7 +41,7 @@ const StudentDetail = () => {
       }
     }
     fetchStudent()
-  }, [id, navigate, API_BASE])
+  }, [id, navigate, API_BASE, token]) // Bổ sung token vào theo dõi
 
   const formatAddress = (addr) => {
     if (!addr) return ''
