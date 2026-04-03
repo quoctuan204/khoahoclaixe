@@ -21,17 +21,23 @@ router.post('/register-course', async (req, res) => {
     }
 
     const dbData = { ...req.body };
-    if (dbData.phone) dbData.phone = encrypt(dbData.phone);
-    if (dbData.cccd) dbData.cccd = encrypt(dbData.cccd);
+    try {
+      if (dbData.phone) dbData.phone = encrypt(dbData.phone);
+      if (dbData.cccd) dbData.cccd = encrypt(dbData.cccd);
+    } catch (encErr) {
+      console.error('Lỗi mã hóa:', encErr);
+    }
 
     const registration = new Registration(dbData);
     await registration.save();
 
-    await new Notification({
-      type: 'registration',
-      message: `Đăng ký mới: ${req.body.lastName} ${req.body.firstName} - ${req.body.courseName || req.body.course}`,
-      relatedId: registration._id
-    }).save();
+    try {
+      await new Notification({
+        type: 'registration',
+        message: `Đăng ký mới: ${req.body.lastName} ${req.body.firstName} - ${req.body.courseName || req.body.course}`,
+        relatedId: registration._id
+      }).save();
+    } catch (notifErr) { console.error('Lỗi lưu thông báo:', notifErr); }
 
     const { firstName, lastName, phone, email, course, courseName, cccd, address, note } = req.body; 
 
@@ -47,12 +53,14 @@ router.post('/register-course', async (req, res) => {
       Ghi chú: ${note || 'N/A'}
     `;
 
-    await sendEmail(subject, text);
+    try {
+      await sendEmail(subject, text);
+    } catch (emailErr) { console.error('Lỗi gửi email:', emailErr); }
 
     res.status(200).json({ message: 'Registration successful' });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Error saving registration' });
+    console.error('API /register-course Error:', error);
+    res.status(500).json({ message: 'Lỗi server: ' + error.message });
   }
 });
 
@@ -132,16 +140,20 @@ router.post('/contact-advice', async (req, res) => {
     }
 
     const contactData = { ...req.body };
-    if (contactData.phone) contactData.phone = encrypt(contactData.phone);
+    try {
+      if (contactData.phone) contactData.phone = encrypt(contactData.phone);
+    } catch (encErr) { console.error('Lỗi mã hóa:', encErr); }
 
     const contact = new Contact(contactData);
     await contact.save();
 
-    await new Notification({
-      type: 'contact',
-      message: `Tư vấn mới: ${req.body.fullname} - ${req.body.phone}`,
-      relatedId: contact._id
-    }).save();
+    try {
+      await new Notification({
+        type: 'contact',
+        message: `Tư vấn mới: ${req.body.fullname} - ${req.body.phone}`,
+        relatedId: contact._id
+      }).save();
+    } catch (notifErr) { console.error(notifErr); }
 
     const { fullname, phone, course, note } = req.body;
 
@@ -153,12 +165,14 @@ router.post('/contact-advice', async (req, res) => {
       Nội dung: ${note || 'N/A'}
     `;
 
-    await sendEmail(subject, text);
+    try {
+      await sendEmail(subject, text);
+    } catch (emailErr) { console.error('Lỗi gửi email:', emailErr); }
 
     res.status(200).json({ message: 'Advice request successful' });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Error saving contact' });
+    console.error('API /contact-advice Error:', error);
+    res.status(500).json({ message: 'Lỗi server: ' + error.message });
   }
 });
 
