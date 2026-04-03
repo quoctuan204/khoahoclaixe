@@ -172,8 +172,8 @@ const RegisterForTheCourse = () => {
         setSelectedDistrict('')
         setSelectedWard('')
       } else {
-        const errorData = await response.json();
-        toast.error(errorData.message || 'Có lỗi xảy ra. Vui lòng thử lại.')
+        const errorData = await response.json().catch(() => ({}));
+        toast.error(errorData.message || 'Có lỗi từ máy chủ. Vui lòng thử lại.')
       }
     } catch (error) {
       console.error('Error:', error)
