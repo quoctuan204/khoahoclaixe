@@ -1,3 +1,10 @@
+// --- TEST UPLOAD MULTER MEMORY ---
+const multerTest = require('multer')({ storage: require('multer').memoryStorage() });
+app.post('/api/test-upload', multerTest.single('image'), (req, res) => {
+  console.log('==== [TEST UPLOAD] req.file:', req.file);
+  if (!req.file) return res.status(400).json({ message: 'Không nhận được file (test)' });
+  res.json({ message: 'Nhận file thành công (test)', originalname: req.file.originalname, size: req.file.size });
+});
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
