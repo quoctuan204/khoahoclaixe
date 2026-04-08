@@ -39,6 +39,29 @@ router.post('/', async (req, res) => {
     const phoneRegex = /(03|05|07|08|09)[0-9]{8}/;
     const phoneMatch = cleanedMessage.match(phoneRegex);
 
+    // --- BỔ SUNG: LOGIC NHẬN DIỆN TÊN KHÁCH HÀNG (KHI ĐANG CHỜ) ---
+    if (!phoneMatch && pendingNames.has(clientIp)) {
+      const pendingData = pendingNames.get(clientIp);
+      // Chờ tối đa 15 phút để khách nhập tên
+      if (Date.now() - pendingData.timestamp < 15 * 60 * 1000) {
+        const nameStr = latestMessage.trim();
+        const normName = normalizeText(nameStr);
+        // Tránh nhận nhầm các câu hỏi khóa học thành tên người
+        const isQuestion = normName.includes('b1') || normName.includes('b2') || normName.includes('c') || normName.includes('gia') || normName.includes('hoc phi');
+        
+        if (nameStr.length >= 2 && nameStr.length <= 40 && !isQuestion) {
+          const formattedName = capitalizeName(nameStr);
+          try {
+            await Contact.findByIdAndUpdate(pendingData.contactId, {
+              fullname: formattedName + ' (Từ Chatbot AI)'
+            });
+            pendingNames.delete(clientIp); // Xóa IP khỏi danh sách chờ
+            return res.json({ reply: `Cảm ơn bạn ${formattedName}! Trung tâm sẽ sớm liên hệ tư vấn chi tiết cho bạn qua số điện thoại đã cung cấp nhé.` });
+          } catch (err) { console.error('Lỗi lưu tên chatbot:', err); }
+        }
+      } else { pendingNames.delete(clientIp); } // Quá hạn 15 phút
+    }
+
     let phoneReply = '';
     if (phoneMatch) {
       const extractedPhone = phoneMatch[0];
@@ -74,12 +97,17 @@ router.post('/', async (req, res) => {
 
           // Đưa IP này vào danh sách chờ nhập tên kèm ID của Database vừa tạo
           pendingNames.set(clientIp, { contactId: savedContact._id, timestamp: Date.now() });
-          phoneReply = `Hệ thống đã ghi nhận số điện thoại. Bạn có thể cho mình xin Tên để tiện xưng hô và hỗ trợ được không ạ?`;
+          phoneReply = `Hệ thống đã ghi nhận số điện thoại ${extractedPhone}. Bạn có thể cho mình xin Tên để tiện xưng hô và hỗ trợ được không ạ?`;
         } catch (err) {
           console.error('Lỗi khi lưu SĐT từ Chatbot:', err);
         }
       } else {
-        console.log(`[Spam Guard] Đã chặn SĐT ${extractedPhone} từ IP ${clientIp}`);
+        console.log(`[Spam Guard] Đã nhận diện lại SĐT ${extractedPhone} từ IP ${clientIp}`);
+        // FIX: Trả lời lại cho khách biết AI vẫn nhận diện được số điện thoại dù họ nhập trùng nhiều lần
+        phoneReply = `Số điện thoại ${extractedPhone} đã được hệ thống ghi nhận trước đó. Chuyên viên sẽ sớm liên hệ lại với bạn nhé!`;
+        if (pendingNames.has(clientIp)) {
+           phoneReply = `Hệ thống đã ghi nhận số ${extractedPhone}. Bạn cho mình xin Tên để chuyên viên tiện xưng hô nhé!`;
+        }
       }
     }
     // ----------------------------------------------------
