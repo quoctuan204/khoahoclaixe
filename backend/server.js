@@ -10,7 +10,6 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
-const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const helmet = require('helmet');
@@ -69,6 +68,7 @@ const uploadCloud = require('./config/cloudinary');
 
 // Upload Route
 // SECURITY: Added 'protect' middleware to prevent unauthorized uploads
+app.post('/api/upload', protect, (req, res) => {
   uploadCloud.single('image')(req, res, (err) => {
     if (err) console.log("UPLOAD ERROR:", err.message);
     console.log('==== [UPLOAD DEBUG] req.file:', req.file);
@@ -78,6 +78,7 @@ const uploadCloud = require('./config/cloudinary');
     // Trả về trực tiếp URL từ Cloudinary
     res.json({ imageUrl: req.file.path });
   });
+});
 
 // --- UPLOAD VIDEO ---
 app.post('/api/upload-video', protect, (req, res) => {
