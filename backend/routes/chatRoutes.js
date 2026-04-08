@@ -33,37 +33,6 @@ router.post('/', async (req, res) => {
     const latestMessage = history[history.length - 1].text;
     const clientIp = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress;
 
-    // --- LOGIC CẬP NHẬT TÊN NẾU ĐANG TRONG TRẠNG THÁI CHỜ ---
-    if (pendingNames.has(clientIp)) {
-      const pendingData = pendingNames.get(clientIp);
-      // Chờ tối đa 5 phút
-      if (Date.now() - pendingData.timestamp < 5 * 60 * 1000) {
-        // Nếu câu trả lời ngắn (dưới 50 ký tự) thì khả năng cao là Tên
-        if (latestMessage.length < 50) {
-          const formattedName = capitalizeName(latestMessage);
-          try {
-            await Contact.findByIdAndUpdate(pendingData.contactId, { fullname: formattedName });
-            pendingNames.delete(clientIp);
-            
-            // Lấy giờ hiện tại chính xác theo múi giờ Việt Nam (GMT+7)
-            const vnTime = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" }));
-            const currentHour = vnTime.getHours();
-            
-            let replyMsg = `Cảm ơn bạn ${formattedName}. Trung tâm đã cập nhật thông tin và chuyên viên sẽ sớm liên hệ hỗ trợ bạn nhé!`;
-            if (currentHour >= 22 || currentHour < 7) {
-              replyMsg += `\n\nHiện ngoài giờ làm việc, nhân viên sẽ gọi lại vào sáng mai.`;
-            }
-            
-            return res.json({ reply: replyMsg });
-          } catch (err) {
-            console.error('Lỗi khi cập nhật tên:', err);
-          }
-        }
-      } else {
-        pendingNames.delete(clientIp); // Xóa khỏi bộ nhớ nếu chờ quá lâu
-      }
-    }
-
     // --- LOGIC TRÍCH XUẤT VÀ LƯU SỐ ĐIỆN THOẠI TỰ ĐỘNG ---
     // Xóa khoảng trắng, dấu chấm, dấu gạch ngang để dễ quét SĐT (VD: 0912 345 678 -> 0912345678)
     const cleanedMessage = latestMessage.replace(/[\s\.\-]/g, '');

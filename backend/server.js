@@ -1,11 +1,3 @@
-// --- TEST UPLOAD MULTER MEMORY ---
-// const multer = require('multer'); // Only require multer once
-// const multerMemory = multer({ storage: multer.memoryStorage() });
-// app.post('/api/test-upload', multerMemory.single('image'), (req, res) => {
-//   console.log('==== [TEST UPLOAD] req.file:', req.file);
-//   if (!req.file) return res.status(400).json({ message: 'Không nhận được file (test)' });
-//   res.json({ message: 'Nhận file thành công (test)', originalname: req.file.originalname, size: req.file.size });
-// });
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
@@ -65,6 +57,15 @@ if (!fs.existsSync(uploadDir)) {
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 const uploadCloud = require('./config/cloudinary');
+
+// --- TEST UPLOAD MULTER MEMORY ---
+const multer = require('multer'); 
+const multerMemory = multer({ storage: multer.memoryStorage() });
+app.post('/api/test-upload', multerMemory.single('image'), (req, res) => {
+  console.log('==== [TEST UPLOAD] req.file:', req.file);
+  if (!req.file) return res.status(400).json({ message: 'Không nhận được file (test)' });
+  res.json({ message: 'Nhận file thành công (test)', originalname: req.file.originalname, size: req.file.size });
+});
 
 // Upload Route
 // SECURITY: Added 'protect' middleware to prevent unauthorized uploads
