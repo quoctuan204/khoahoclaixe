@@ -64,9 +64,10 @@ const uploadCloud = require('./config/cloudinary');
 app.post('/api/upload', protect, (req, res) => {
   uploadCloud.single('image')(req, res, (err) => {
     if (err) console.log("UPLOAD ERROR:", err.message);
+    console.log('==== [UPLOAD DEBUG] req.file:', req.file);
+    console.log('==== [UPLOAD DEBUG] req.body:', req.body);
     if (err) return res.status(400).json({ message: err.message || 'Lỗi upload file' });
     if (!req.file) return res.status(400).json({ message: 'Chưa chọn file' });
-    
     // Trả về trực tiếp URL từ Cloudinary
     res.json({ imageUrl: req.file.path });
   });
