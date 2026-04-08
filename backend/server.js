@@ -1,5 +1,5 @@
 // --- TEST UPLOAD MULTER MEMORY ---
-const multer = require('multer');
+const multer = require('multer'); // Only require multer once
 const multerMemory = multer({ storage: multer.memoryStorage() });
 app.post('/api/test-upload', multerMemory.single('image'), (req, res) => {
   console.log('==== [TEST UPLOAD] req.file:', req.file);
@@ -69,7 +69,6 @@ const uploadCloud = require('./config/cloudinary');
 
 // Upload Route
 // SECURITY: Added 'protect' middleware to prevent unauthorized uploads
-app.post('/api/upload', protect, (req, res) => {
   uploadCloud.single('image')(req, res, (err) => {
     if (err) console.log("UPLOAD ERROR:", err.message);
     console.log('==== [UPLOAD DEBUG] req.file:', req.file);
@@ -79,7 +78,6 @@ app.post('/api/upload', protect, (req, res) => {
     // Trả về trực tiếp URL từ Cloudinary
     res.json({ imageUrl: req.file.path });
   });
-});
 
 // --- UPLOAD VIDEO ---
 app.post('/api/upload-video', protect, (req, res) => {
