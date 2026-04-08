@@ -5,6 +5,21 @@
   color-scheme: light;
 }
 
+/* Ngăn hệ điều hành ép dark mode lên website */
+html, body, #root {
+  background: #fff !important;
+  color: #000 !important;
+  color-scheme: light !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  html, body, #root {
+    background: #fff !important;
+    color: #000 !important;
+    color-scheme: light !important;
+  }
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -28,8 +43,24 @@ a.active hr {
 .carousel img,
 [class*="banner"] img {
   width: 100% !important;
+  max-width: 100vw !important;
   height: auto !important;
   object-fit: cover !important;
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .banner-container img, 
+  .slider img, 
+  .carousel img,
+  [class*="banner"] img {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: auto !important;
+    min-height: 1px;
+    object-fit: cover !important;
+    display: block;
+  }
 }
 
 /* 2. Chống vỡ layout, tràn chữ trên màn hình điện thoại */
