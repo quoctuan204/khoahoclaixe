@@ -117,21 +117,29 @@ const AdminBanners = () => {
 
   // Tách hàm upload riêng biệt để đảm bảo ảnh upload xong mới save (Bước 1)
   const uploadImage = async (file) => {
-    const uploadData = new FormData()
-    uploadData.append('image', file)
-    
+    if (!file) {
+      console.error('Không có file để upload!');
+      toast.error('Không có file để upload!');
+      return null;
+    }
+    console.log('==== [UPLOAD DEBUG] file:', file);
+    const uploadData = new FormData();
+    uploadData.append('image', file);
+    // Kiểm tra lại FormData
+    for (let pair of uploadData.entries()) {
+      console.log('==== [UPLOAD DEBUG] FormData:', pair[0], pair[1]);
+    }
     const uploadRes = await fetch(`${API_BASE}/api/upload`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${token}` },
       body: uploadData
-    })
-    
-    const resData = await uploadRes.json().catch(() => ({}))
+    });
+    const resData = await uploadRes.json().catch(() => ({}));
     if (!uploadRes.ok) {
-      throw new Error(resData.message || 'Lỗi tải ảnh lên server')
+      console.error('==== [UPLOAD DEBUG] uploadRes:', uploadRes);
+      throw new Error(resData.message || 'Lỗi tải ảnh lên server');
     }
-    
-    return resData.imageUrl || resData.url // Lấy đúng field url từ response
+    return resData.imageUrl || resData.url;
   }
 
   const handleSave = async () => {
