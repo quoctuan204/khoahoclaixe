@@ -17,3 +17,30 @@ body {
 a.active hr {
     display: block;
 }
+
+/* =========================================
+   FIX LỖI GIAO DIỆN MOBILE & BANNER
+========================================= */
+
+/* 1. Đảm bảo ảnh Banner luôn full 100% chiều ngang màn hình và không bị méo */
+.banner-container img, 
+.slider img, 
+.carousel img,
+[class*="banner"] img {
+  width: 100% !important;
+  height: auto !important;
+  object-fit: cover !important;
+}
+
+/* 2. Chống vỡ layout, tràn chữ trên màn hình điện thoại */
+@media (max-width: 768px) {
+  h1, h2, h3, h4, h5, h6, p, a, span, div {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+  
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+}

@@ -208,19 +208,22 @@ const Navbar = () => {
             <SmartNavLink to="/" onClick={() => setOpen(false)} className="py-3 border-b">
               Trang chủ
             </SmartNavLink>
-            <SmartNavLink to="/course" onClick={() => setOpen(false)} className="py-3 border-b">
+            <SmartNavLink to="/gioi_thieu" onClick={() => setOpen(false)} className="py-3 border-b">
+              Giới thiệu
+            </SmartNavLink>
+            <SmartNavLink to="/khoa_hoc" onClick={() => setOpen(false)} className="py-3 border-b">
               Khóa học
             </SmartNavLink>
-            <SmartNavLink to="/tuition" onClick={() => setOpen(false)} className="py-3 border-b">
+            <SmartNavLink to="/hoc_phi" onClick={() => setOpen(false)} className="py-3 border-b">
               Học phí
             </SmartNavLink>
             <SmartNavLink to="/thu-vien-video" onClick={() => setOpen(false)} className="py-3 border-b">
               Video
             </SmartNavLink>
-            <SmartNavLink to="/news" onClick={() => setOpen(false)} className="py-3 border-b">
+            <SmartNavLink to="/tin_tuc" onClick={() => setOpen(false)} className="py-3 border-b">
               Tin tức
             </SmartNavLink>
-            <SmartNavLink to="/contact" onClick={() => setOpen(false)} className="py-3 border-b">
+            <SmartNavLink to="/lien_he" onClick={() => setOpen(false)} className="py-3 border-b">
               Liên hệ
             </SmartNavLink>
 
