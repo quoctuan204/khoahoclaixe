@@ -16,6 +16,43 @@ const capitalizeName = (str) => {
   return str.trim().split(/\s+/).map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
 };
 
+// --- THÊM MỚI: Hàm bóc tách Tên từ câu chứa cả SĐT ---
+const extractNameFromText = (text, phoneToExclude = '') => {
+  // Cách 1: Tìm theo từ khóa (tên là, mình là...)
+  const nameRegex = /(?:tên(?: là)?|mình(?: tên| là)|anh(?: tên| là)?|chị(?: tên| là)?|em(?: tên| là)?|gọi(?: là| mình là)?)\s+([\p{L}\s]+?)(?:\s*(?:số|sđt|sdt|liên hệ|0\d|[\.,\-]|$))/iu;
+  const match = text.match(nameRegex);
+  
+  let possibleName = null;
+
+  if (match && match[1]) {
+    possibleName = match[1].trim();
+  } else if (phoneToExclude) {
+    // Cách 2: Dự phòng cho câu ngắn gọn (VD: "Tâm 0912345678" hoặc "0912345678 Tâm")
+    let textWithoutPhone = text.replace(phoneToExclude, '').trim();
+    textWithoutPhone = textWithoutPhone.replace(/^[\.,\-:]+|[\.,\-:]+$/g, '').trim(); // Xóa dấu câu thừa
+    textWithoutPhone = textWithoutPhone.replace(/^(?:số|sđt|sdt|call)\s*/i, '').trim(); // Xóa chữ "số", "sđt" bơ vơ
+    
+    // Nếu chuỗi còn lại chỉ toàn là chữ cái, dài từ 1-4 từ -> Khả năng cao là Tên
+    if (/^[\p{L}\s]+$/u.test(textWithoutPhone)) {
+       const wordCount = textWithoutPhone.split(/\s+/).length;
+       if (wordCount >= 1 && wordCount <= 4) {
+           possibleName = textWithoutPhone;
+       }
+    }
+  }
+
+  if (possibleName) {
+    possibleName = possibleName.replace(/\s+(nhé|nha|ạ|đây|đó)$/i, '').trim(); // Loại bỏ từ đệm cuối câu
+    if (possibleName.length >= 2 && possibleName.length <= 40) {
+       const norm = normalizeText(possibleName);
+       // Bỏ qua nếu từ đó trông giống câu hỏi khóa học hơn là Tên người
+       const isCourseKeyword = ['b1', 'b2', 'hang c', 'xe tai', 'hoc phi', 'gia', 'bao nhieu'].some(kw => norm.includes(kw));
+       if (!isCourseKeyword) return capitalizeName(possibleName);
+    }
+  }
+  return null;
+};
+
 // Biến lưu trữ tạm thời trên RAM để chống Spam
 const recentPhones = new Set(); 
 const ipPhoneSubmissions = new Map();
@@ -65,6 +102,9 @@ router.post('/', async (req, res) => {
     let phoneReply = '';
     if (phoneMatch) {
       const extractedPhone = phoneMatch[0];
+      
+      // ---> Cố gắng lấy Tên ngay trong cùng một câu chứa SĐT
+      const extractedName = extractNameFromText(latestMessage, extractedPhone);
 
       // Khởi tạo hoặc lấy lịch sử theo IP (Reset mỗi 1 giờ)
       const ipData = ipPhoneSubmissions.get(clientIp) || { count: 0, resetTime: Date.now() + 60 * 60 * 1000 };
@@ -84,8 +124,11 @@ router.post('/', async (req, res) => {
         ipPhoneSubmissions.set(clientIp, ipData);
 
         try {
+          // Nếu tìm thấy tên thì gán, không thì để mặc định "Khách hàng"
+          const finalName = extractedName ? `${extractedName} (Từ Chatbot AI)` : 'Khách hàng (Từ Chatbot AI)';
+
           const newContact = new Contact({
-            fullname: 'Khách hàng (Từ Chatbot AI)',
+            fullname: finalName,
             phone: encrypt(extractedPhone),
             course: 'Chưa xác định',
             note: `Hệ thống AI tự động thu thập từ Chatbot. Tin nhắn của khách: "${latestMessage}"`
@@ -95,18 +138,31 @@ router.post('/', async (req, res) => {
           await new Notification({ type: 'contact', message: `AI Chatbot thu thập được SĐT mới: ${extractedPhone}`, relatedId: savedContact._id }).save();
           await sendEmail('Chatbot AI thu thập SĐT mới', `Khách hàng vừa cung cấp SĐT qua Chatbot: ${extractedPhone}\nTin nhắn: ${latestMessage}`);
 
-          // Đưa IP này vào danh sách chờ nhập tên kèm ID của Database vừa tạo
-          pendingNames.set(clientIp, { contactId: savedContact._id, timestamp: Date.now() });
-          phoneReply = `Hệ thống đã ghi nhận số điện thoại ${extractedPhone}. Bạn có thể cho mình xin Tên để tiện xưng hô và hỗ trợ được không ạ?`;
+          if (extractedName) {
+            // Nếu đã lấy được tên -> Không đưa vào pendingNames nữa, chốt luôn!
+            phoneReply = `Cảm ơn bạn ${extractedName}! Hệ thống đã ghi nhận số điện thoại ${extractedPhone}. Chuyên viên sẽ sớm liên hệ tư vấn chi tiết cho bạn nhé.`;
+          } else {
+            // Nếu chưa lấy được tên -> Đưa IP này vào danh sách chờ nhập tên
+            pendingNames.set(clientIp, { contactId: savedContact._id, timestamp: Date.now() });
+            phoneReply = `Hệ thống đã ghi nhận số điện thoại ${extractedPhone}. Bạn có thể cho mình xin Tên để tiện xưng hô và hỗ trợ được không ạ?`;
+          }
         } catch (err) {
           console.error('Lỗi khi lưu SĐT từ Chatbot:', err);
         }
       } else {
         console.log(`[Spam Guard] Đã nhận diện lại SĐT ${extractedPhone} từ IP ${clientIp}`);
-        // FIX: Trả lời lại cho khách biết AI vẫn nhận diện được số điện thoại dù họ nhập trùng nhiều lần
-        phoneReply = `Số điện thoại ${extractedPhone} đã được hệ thống ghi nhận trước đó. Chuyên viên sẽ sớm liên hệ lại với bạn nhé!`;
-        if (pendingNames.has(clientIp)) {
-           phoneReply = `Hệ thống đã ghi nhận số ${extractedPhone}. Bạn cho mình xin Tên để chuyên viên tiện xưng hô nhé!`;
+        
+        if (extractedName && pendingNames.has(clientIp)) {
+            // Xử lý trường hợp khách nhập lại để bổ sung tên (VD: Vừa nãy gõ SĐT, AI hỏi tên, khách gõ lại "Tâm 0912...")
+            const pendingData = pendingNames.get(clientIp);
+            await Contact.findByIdAndUpdate(pendingData.contactId, { fullname: `${extractedName} (Từ Chatbot AI)` }).catch(()=>{});
+            pendingNames.delete(clientIp);
+            phoneReply = `Cảm ơn bạn ${extractedName}, số điện thoại ${extractedPhone} đã được hệ thống ghi nhận. Chuyên viên sẽ sớm gọi cho bạn nhé!`;
+        } else {
+            phoneReply = `Số điện thoại ${extractedPhone} đã được hệ thống ghi nhận trước đó. Chuyên viên sẽ sớm liên hệ lại với bạn nhé!`;
+            if (pendingNames.has(clientIp)) {
+               phoneReply = `Hệ thống đã ghi nhận số ${extractedPhone}. Bạn cho mình xin Tên để chuyên viên tiện xưng hô nhé!`;
+            }
         }
       }
     }
