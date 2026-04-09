@@ -90,25 +90,25 @@ const NewsDetail = () => {
         {relatedNews.length > 0 && (
           <div>
             <h3 className='text-2xl font-bold text-gray-900 mb-6 border-l-4 border-[#135bec] pl-3'>Bài viết liên quan</h3>
-            <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
+            <div className='grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6'>
               {relatedNews.map((item) => (
                 <div 
                   key={item._id} 
                   onClick={() => navigate(`/tin_tuc/${item._id}`)}
                   className='bg-white rounded-xl shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-all group border border-gray-100'
                 >
-                  <div className='h-48 overflow-hidden'>
+                  <div className='h-28 sm:h-48 overflow-hidden'>
                     <img 
                       src={item.image || 'https://via.placeholder.com/400x200?text=No+Image'} 
                       alt={item.title} 
                       className='w-full h-full object-cover transition-transform duration-500 group-hover:scale-110' 
                     />
                   </div>
-                  <div className='p-4'>
-                    <h4 className='font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-[#135bec] transition-colors'>
+                  <div className='p-3 sm:p-4'>
+                    <h4 className='text-sm sm:text-base font-bold text-gray-900 mb-1 sm:mb-2 line-clamp-2 group-hover:text-[#135bec] transition-colors'>
                       {item.title}
                     </h4>
-                    <p className='text-sm text-gray-500'>
+                    <p className='text-[10px] sm:text-sm text-gray-500'>
                       {new Date(item.createdAt).toLocaleDateString('vi-VN')}
                     </p>
                   </div>

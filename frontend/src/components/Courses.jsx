@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react'
 import { assets } from '../assets/assets'
 import { useNavigate } from 'react-router-dom'
 import { products } from '../data/products'
-import FadeIn from './FadeIn'
 
 const Courses = () => {
   const navigate = useNavigate();
@@ -82,7 +81,7 @@ const Courses = () => {
     if (!isDown || !scrollRef.current) return
     e.preventDefault()
     const x = e.pageX - scrollRef.current.offsetLeft
-    const walk = (x - startX.current) * 1 // Hệ số nhân tốc độ cuộn (giảm từ 1.5 xuống 1 để kéo chậm và tự nhiên hơn)
+    const walk = (x - startX.current) * 1.5 // Tăng hệ số lên 1.5 để kéo nhẹ tay và mượt hơn
     if (Math.abs(walk) > 10) dragged.current = true // Đánh dấu là đang kéo chứ không phải click
     scrollRef.current.scrollLeft = scrollLeftPos.current - walk
   }
@@ -92,7 +91,7 @@ const Courses = () => {
       <div className='layout-container flex justify-center'>
         <div className='layout-content-container flex flex-col max-w-[1280px] w-full px-4 lg:px-10'>
           <div className='text-center mb-12'>
-            <h2 className='text-[#111318] text-3xl lg:text-4xl font-black mb-4'>
+            <h2 className='text-[#135bec] text-3xl lg:text-4xl font-black mb-4'>
               Các khóa học nổi bật
             </h2>
             <p className='text-gray-600 max-w-2xl mx-auto'>
@@ -100,7 +99,7 @@ const Courses = () => {
             </p>
           </div>
 
-        <div className='relative group'>
+        <div className='relative group -mx-4 md:mx-0'>
           {/* Nút sang trái */}
           <button 
             onClick={() => scroll('left')}
@@ -115,30 +114,26 @@ const Courses = () => {
             onMouseLeave={handleMouseLeave}
             onMouseUp={handleMouseUp}
             onMouseMove={handleMouseMove}
-            className={`flex overflow-x-auto gap-6 pb-8 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] ${isDown ? 'cursor-grabbing snap-none select-none' : 'cursor-grab snap-x snap-mandatory'}`}
+            className={`flex overflow-x-auto gap-6 pb-8 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] after:content-[''] after:min-w-[1px] after:shrink-0 ${isDown ? 'cursor-grabbing snap-none select-none scroll-auto' : 'cursor-grab snap-x snap-proximity scroll-smooth'}`}
           >
             {courseList.map((p, index) => (
-              <FadeIn
-                key={p.id}
-                delay={index * 150} // Tạo độ trễ tăng dần để thẻ xuất hiện lần lượt
-                className={`w-full md:w-[calc(50%-12px)] lg:w-[calc(33.333333%-16px)] snap-center shrink-0 flex`}
-              >
+              <div key={p.id} className={`w-[calc(50%-12px)] lg:w-[calc(33.333333%-16px)] snap-start shrink-0 flex`}>
                 <div 
                   onClick={(e) => {
                     if (dragged.current) return // Bỏ qua click nếu người dùng đang thực hiện thao tác kéo
                     p.isVisible !== false && handleOpen(p.id)
                   }} 
-                  className={`w-full h-full flex flex-col bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-lg transition-all duration-300 group ${p.isVisible === false ? 'opacity-60 grayscale cursor-not-allowed' : 'cursor-pointer hover:shadow-2xl'}`}
+                className={`w-full h-full flex flex-col bg-white rounded-2xl overflow-hidden border border-gray-200 transition-all duration-300 group ${p.isVisible === false ? 'opacity-60 grayscale cursor-not-allowed' : 'cursor-pointer hover:border-[#135bec]'}`}
                 >
-                  <div className='h-64 overflow-hidden relative'>
+                  <div className='h-32 sm:h-64 overflow-hidden relative'>
                   {p.id === 'b1-sotudong' && (
-                    <div className='absolute top-4 left-4 z-10 bg-[#f97316] text-white text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wide'>
-                      Phổ biến nhất
+                    <div className='absolute top-2 left-2 sm:top-4 sm:left-4 z-10 bg-[#f97316] text-white text-[10px] sm:text-xs font-bold px-2 py-1 sm:px-3 sm:py-1.5 rounded-full uppercase tracking-wide'>
+                      Phổ biến
                     </div>
                   )}
                   {p.isVisible === false && (
                     <div className='absolute inset-0 z-20 flex items-center justify-center bg-black/10'>
-                      <span className='bg-gray-800 text-white px-4 py-2 rounded-lg font-bold shadow-md'>Tạm ngưng</span>
+                      <span className='bg-gray-800 text-white px-2 py-1 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-base font-bold shadow-md'>Tạm ngưng</span>
                     </div>
                   )}
                   <img 
@@ -148,33 +143,33 @@ const Courses = () => {
                     alt={p.title} 
                   />
                 </div>
-                <div className='p-6 flex flex-col flex-1'>
-                  <div className='flex justify-between items-start mb-2'>
-                    <h3 className='text-2xl font-bold text-[#111318]'>
+                <div className='p-3 sm:p-6 flex flex-col flex-1'>
+                  <div className='flex justify-between items-start mb-1 sm:mb-2'>
+                    <h3 className='text-base sm:text-2xl font-bold text-[#135bec] leading-tight'>
                       {p.title}
                     </h3>
                   </div>
-                  <p className='text-gray-500 text-sm mb-4 line-clamp-2'>
+                  <p className='text-gray-500 text-xs sm:text-sm mb-3 sm:mb-4 line-clamp-2'>
                     {p.description}
                   </p>
-                  <ul className='flex flex-col gap-2 mb-6'>
-                    <li className='flex items-center gap-2 text-sm text-gray-700'>
-                      <span className='material-symbols-outlined text-green-500 text-[20px]'>check</span> Thời gian học: {p.duration}
+                  <ul className='flex flex-col gap-1 sm:gap-2 mb-4 sm:mb-6'>
+                    <li className='flex items-start gap-1 sm:gap-2 text-xs sm:text-sm text-gray-700'>
+                      <span className='material-symbols-outlined text-green-500 text-[16px] sm:text-[20px]'>check</span> <span>Thời gian: {p.duration}</span>
                     </li>
-                    <li className='flex items-center gap-2 text-sm text-gray-700'>
-                      <span className='material-symbols-outlined text-green-500 text-[20px]'>check</span> Xe tập: {p.vehicle}
+                    <li className='flex items-start gap-1 sm:gap-2 text-xs sm:text-sm text-gray-700'>
+                      <span className='material-symbols-outlined text-green-500 text-[16px] sm:text-[20px]'>check</span> <span className='line-clamp-1'>Xe: {p.vehicle}</span>
                     </li>
                     {p.highlights.map((h, i) => (
-                      <li key={i} className='flex items-center gap-2 text-sm text-gray-700'>
-                        <span className='material-symbols-outlined text-green-500 text-[20px]'>check</span> {h}
+                      <li key={i} className='flex items-start gap-1 sm:gap-2 text-xs sm:text-sm text-gray-700'>
+                        <span className='material-symbols-outlined text-green-500 text-[16px] sm:text-[20px]'>check</span> <span className='line-clamp-1'>{h}</span>
                       </li>
                     ))}
                   </ul>
 
-                  <div className='mt-auto pt-4 border-t border-gray-100 flex items-center justify-between'>
+                  <div className='mt-auto pt-3 sm:pt-4 border-t border-gray-100 flex items-center justify-between'>
                     <div className='flex flex-col'>
-                      <span className='text-xs text-gray-400 line-through'>{p.oldPrice}</span>
-                      <span className='text-xl font-bold text-red-500'>{p.price}</span>
+                      <span className='text-[10px] sm:text-xs text-gray-400 line-through'>{p.oldPrice}</span>
+                      <span className='text-base sm:text-xl font-bold text-red-500'>{p.price}</span>
                     </div>
 
                     <button 
@@ -184,14 +179,14 @@ const Courses = () => {
                         p.isVisible !== false && handleOpen(p.id); 
                       }} 
                       disabled={p.isVisible === false}
-                      className={`rounded-lg font-bold px-4 py-2 transition-colors ${p.isVisible === false ? 'bg-gray-400 text-white cursor-not-allowed' : 'cursor-pointer bg-blue-500 hover:bg-blue-700 text-white hover:text-white text-primary'}`}
+                      className={`rounded-lg font-bold text-xs sm:text-base px-3 py-1.5 sm:px-4 sm:py-2 transition-colors ${p.isVisible === false ? 'bg-gray-400 text-white cursor-not-allowed' : 'cursor-pointer bg-[#135bec] hover:bg-[#0f4bc4] text-white'}`}
                     >
                       Chi tiết
                     </button>
                   </div>
                 </div>
               </div>
-              </FadeIn>
+              </div>
             ))}
           </div>
 

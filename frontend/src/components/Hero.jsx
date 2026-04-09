@@ -68,8 +68,8 @@ const Hero = () => {
   const currentSlide = slides[currentIndex]
 
   return (
-    <div className='relative w-full'>
-    <div className='layout-container flex w-full'>
+      <div className='relative w-full hidden md:block'>
+      <div className='layout-container flex w-full'>
         <div className='layout-content-container flex w-full flex-col'>
                 <div className='relative overflow-hidden min-h-[500px] lg:min-h-[600px] flex items-center justify-start p-6 lg:p-16 shadow-lg'>
                     {slides.map((slide, index) => (
@@ -122,8 +122,7 @@ const Hero = () => {
                 </div>
             </div>
         </div>
-      
-    </div>
+      </div>
   )
 }
 

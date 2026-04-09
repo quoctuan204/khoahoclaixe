@@ -586,7 +586,7 @@ const Product = () => {
                         </AdminOnly>
 
                         {/* Giá */}
-                        <div className='bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden'>
+                        <div className='bg-white rounded-xl border border-gray-200 overflow-hidden'>
                             <div className='bg-[#135bec] p-4 text-center'>
                                 <h3 className='text-white font-bold text-lg'>ĐĂNG KÝ KHÓA B2</h3>
                                 <p className='text-blue-100 text-sm'>

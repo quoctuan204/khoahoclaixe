@@ -89,7 +89,7 @@ const DrivingPracticeCar = () => {
 
                         <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'>
                             {filteredCars.map(car => (
-                                <div key={car.id} className='group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-gray-100'>
+                                <div key={car.id} className='group bg-white rounded-2xl overflow-hidden transition-all border border-gray-200 hover:border-[#135bec]'>
                                     <div className='relative h-64 overflow-hidden'>
                                         <div className='absolute top-4 left-4 z-10 bg-blue-600 text-white text-xs font-bold px-3 py-1.5 rounded-md uppercase'>
                                             {car.tag}

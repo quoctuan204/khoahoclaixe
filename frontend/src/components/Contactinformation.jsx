@@ -64,54 +64,54 @@ const Contactinformation = () => {
   // const encodedAddress = encodeURIComponent(address);
 
   return (
-    <div className='flex-1 w-full bg-background-light dark:bg-background-dark py-10 lg:py-16'>
+    <div className='flex-1 w-full bg-background-light py-10 lg:py-16'>
       <div className='max-w-7xl mx-auto px-4 lg:px-10'>
         <div className='grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12'>
           <div className='lg:col-span-5 flex flex-col gap-8'>
             <div>
-              <h2 className='text-[#111318] dark:text-white text-2xl font-bold mb-6 flex items-center gap-2'>
+              <h2 className='text-[#111318] text-2xl font-bold mb-6 flex items-center gap-2'>
                 <span className='w-1 h-8 bg-[#f97316] rounded-full block'></span>
                 Thông tin liên hệ
               </h2>
               <div className='flex flex-col gap-4'>
                 {/* Address Card */}
-                <div className='flex gap-4 rounded-xl border border-[#dbdfe6] dark:border-gray-700 bg-white dark:bg-[#1a202c] p-5 shadow-sm hover:shadow-md transition-shadow'>
+                <div className='flex gap-4 rounded-xl border border-[#dbdfe6] bg-white p-5 shadow-sm hover:shadow-md transition-shadow'>
                   <div className='bg-[#135bec]/10 text-[#135bec] p-3 rounded-full h-fit'>
                     <span className='material-symbols-outlined'>location_on</span>
                   </div>
                   <div>
-                    <h3 className='text-[#111318] dark:text-white text-base font-bold mb-1'>Địa chỉ trung tâm</h3>
-                    <p className='text-[#616f89] dark:text-gray-400 text-sm'>{settings.address}</p>
+                    <h3 className='text-[#111318] text-base font-bold mb-1'>Địa chỉ trung tâm</h3>
+                    <p className='text-[#616f89] text-sm'>{settings.address}</p>
                   </div>
                 </div>
 
                 {/* Hotline Card */}
-                <div className='flex gap-4 rounded-xl border border-[#dbdfe6] dark:border-gray-700 bg-white dark:bg-[#1a202c] p-5 shadow-sm hover:shadow-md transition-shadow'>
+                <div className='flex gap-4 rounded-xl border border-[#dbdfe6] bg-white p-5 shadow-sm hover:shadow-md transition-shadow'>
                   <div className='bg-[#135bec]/10 text-[#135bec] p-3 rounded-full h-fit'>
                     <span className='material-symbols-outlined'>call</span>
                   </div>
                   <div>
-                    <h3 className='text-[#111318] dark:text-white text-base font-bold mb-1'>Hotline tư vấn</h3>
+                    <h3 className='text-[#111318] text-base font-bold mb-1'>Hotline tư vấn</h3>
                     <p className='text-[#f97316] text-lg font-bold'>{settings.hotline}</p>
-                    <p className='text-[#616f89] dark:text-gray-400 text-xs mt-1'>Hỗ trợ 24/7 (Cả T7 &amp; CN)</p>
+                    <p className='text-[#616f89] text-xs mt-1'>Hỗ trợ 24/7 (Cả T7 &amp; CN)</p>
                   </div>
                 </div>
 
                 {/* Email Card */}
-                <div className='flex gap-4 rounded-xl border border-[#dbdfe6] dark:border-gray-700 bg-white dark:bg-[#1a202c] p-5 shadow-sm hover:shadow-md transition-shadow'>
+                <div className='flex gap-4 rounded-xl border border-[#dbdfe6] bg-white p-5 shadow-sm hover:shadow-md transition-shadow'>
                   <div className='bg-[#135bec]/10 text-[#135bec] p-3 rounded-full h-fit'>
                     <span className='material-symbols-outlined'>mail</span>
                   </div>
                   <div>
-                    <h3 className='text-[#111318] dark:text-white text-base font-bold mb-1'>Email hỗ trợ</h3>
-                    <p className='text-[#616f89] dark:text-gray-400 text-sm'>{settings.email}</p>
+                    <h3 className='text-[#111318] text-base font-bold mb-1'>Email hỗ trợ</h3>
+                    <p className='text-[#616f89] text-sm'>{settings.email}</p>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* map */}
-            <div className='rounded-xl overflow-hidden border border-[#dbdfe6] dark:border-gray-700 shadow-sm h-64 lg:h-auto lg:flex-1 min-h-[250px] relative group'>
+            <div className='rounded-xl overflow-hidden border border-[#dbdfe6] shadow-sm h-64 lg:h-auto lg:flex-1 min-h-[250px] relative group'>
               <iframe
                 className='w-full h-full object-cover transition-all duration-500'
                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1007.1649007809158!2d106.6004964805621!3d10.537466154418244!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31753537aa132061%3A0x476a4f3efb01c894!2zU8OCTiBU4bqsUCBMw4FJIFhFIEPhuqZOIMSQxq_hu5pD!5e1!3m2!1svi!2s!4v1770107565312!5m2!1svi!2s"
@@ -134,21 +134,21 @@ const Contactinformation = () => {
 
           {/* Mẫu đăng ký */}
           <div className='lg:col-span-7'>
-            <div className='bg-white dark:bg-[#1a202c] rounded-2xl shadow-xl border border-[#dbdfe6] dark:border-gray-700 p-6 lg:p-10 sticky top-24'>
+            <div className='bg-white rounded-2xl shadow-xl border border-[#dbdfe6] p-6 lg:p-10 sticky top-24'>
               <div className='mb-8'>
-                <h2 className='text-[#111318] dark:text-white text-2xl lg:text-3xl font-black mb-2 text-center lg:text-left'>
+                <h2 className='text-[#111318] text-2xl lg:text-3xl font-black mb-2 text-center lg:text-left'>
                   Đăng ký tư vấn miễn phí
                 </h2>
-                <p className='text-[#616f89] dark:text-gray-400 text-sm text-center lg:text-left'>
+                <p className='text-[#616f89] text-sm text-center lg:text-left'>
                   Điền thông tin bên dưới, chúng tôi sẽ liên hệ lại trong vòng 15 phút.
                 </p>
               </div>
               <form className='flex flex-col gap-5' onSubmit={handleSubmit}>
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-5'>
                   <div className='flex flex-col gap-2'>
-                    <label className='text-[#111318] dark:text-gray-200 text-sm font-bold' for="fullname">Họ và tên *</label>
+                    <label className='text-[#111318] text-sm font-bold' for="fullname">Họ và tên *</label>
                     <input
-                      className='h-12 w-full rounded-lg border border-[#dbdfe6] dark:border-gray-600 bg-[#f9fafb] dark:bg-gray-800 px-4 text-[#111318] dark:text-white placeholder:text-[#9ca3af] focus:border-[#135bec] focus:ring-1 focus:ring-[#135bec] outline-none transition-all'
+                      className='h-12 w-full rounded-lg border border-[#dbdfe6] bg-[#f9fafb] px-4 text-[#111318] placeholder:text-[#9ca3af] focus:border-[#135bec] focus:ring-1 focus:ring-[#135bec] outline-none transition-all'
                       id='fullname'
                       placeholder='Nhập họ và tên'
                       type="text"
@@ -159,9 +159,9 @@ const Contactinformation = () => {
                   </div>
 
                   <div className='flex flex-col gap-2'>
-                    <label className='text-[#111318] dark:text-gray-200 text-sm font-bold' for="phone">Số điện thoại *</label>
+                    <label className='text-[#111318] text-sm font-bold' for="phone">Số điện thoại *</label>
                     <input
-                      className='h-12 w-full rounded-lg border border-[#dbdfe6] dark:border-gray-600 bg-[#f9fafb] dark:bg-gray-800 px-4 text-[#111318] dark:text-white placeholder:text-[#9ca3af] focus:border-[#135bec] focus:ring-1 focus:ring-[#135bec] outline-none transition-all'
+                      className='h-12 w-full rounded-lg border border-[#dbdfe6] bg-[#f9fafb] px-4 text-[#111318] placeholder:text-[#9ca3af] focus:border-[#135bec] focus:ring-1 focus:ring-[#135bec] outline-none transition-all'
                       id='phone'
                       placeholder='Nhập số điện thoại'
                       type="tel"
@@ -173,11 +173,11 @@ const Contactinformation = () => {
                 </div>
 
                 <div className='flex flex-col gap-2'>
-                  <label className='text-[#111318] dark:text-gray-200 text-sm font-bold' for="course">
+                  <label className='text-[#111318] text-sm font-bold' for="course">
                     Khóa học quan tâm
                   </label>
                   <div className='relative'>
-                    <select className='h-12 w-full appearance-none rounded-lg border border-[#dbdfe6] dark:border-gray-600 bg-[#f9fafb] dark:bg-gray-800 px-4 text-[#111318] dark:text-white focus:border-[#135bec] focus:ring-1 focus:ring-[#135bec] outline-none transition-all cursor-pointer'
+                    <select className='h-12 w-full appearance-none rounded-lg border border-[#dbdfe6] bg-[#f9fafb] px-4 text-[#111318] focus:border-[#135bec] focus:ring-1 focus:ring-[#135bec] outline-none transition-all cursor-pointer'
                       id='course'
                       name='course'
                       value={formData.course}
@@ -197,11 +197,11 @@ const Contactinformation = () => {
                 </div>
 
                 <div className='flex flex-col gap-2'>
-                  <label className='text-[#111318] dark:text-gray-200 text-sm font-bold' for="message">
+                  <label className='text-[#111318] text-sm font-bold' for="message">
                     Nội dung cần tư vấn
                   </label>
                   <textarea
-                    className='w-full rounded-lg border border-[#dbdfe6] dark:border-gray-600 bg-[#f9fafb] dark:bg-gray-800 p-4 text-[#111318] dark:text-white placeholder:text-[#9ca3af] focus:border-[#135bec] focus:ring-1 focus:ring-[#135bec] outline-none transition-all resize-none'
+                    className='w-full rounded-lg border border-[#dbdfe6] bg-[#f9fafb] p-4 text-[#111318] placeholder:text-[#9ca3af] focus:border-[#135bec] focus:ring-1 focus:ring-[#135bec] outline-none transition-all resize-none'
                     rows="4"
                     placeholder='Ví dụ: Tôi muốn học vào cuối tuần...'
                     id="message"
@@ -215,7 +215,7 @@ const Contactinformation = () => {
                     id='policy'
                     type="checkbox"/>
                   <label
-                    className='text-sm text-[#616f89] dark:text-gray-400'
+                    className='text-sm text-[#616f89]'
                     for="policy">
                       Tôi đồng ý với <a className='text-[#135bec] hover:underline' href="#">điều khoản dịch vụ</a> và <a className='text-[#135bec] hover:underline' href="#">chính sách bảo mật</a>.
                   </label>

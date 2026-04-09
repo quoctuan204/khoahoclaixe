@@ -77,7 +77,7 @@ const ChatbotWidget = () => {
   return (
     <div className="fixed bottom-6 right-6 z-50">
       {isOpen ? (
-        <div className="w-80 sm:w-96 h-[500px] bg-white rounded-2xl shadow-2xl flex flex-col border border-[#dbdfe6] dark:border-gray-700 overflow-hidden">
+        <div className="w-80 sm:w-96 h-[500px] bg-white rounded-2xl shadow-2xl flex flex-col border border-[#dbdfe6] overflow-hidden">
           {/* Header */}
           <div className="bg-[#135bec] text-white p-4 flex justify-between items-center shadow-md z-10">
             <div className="flex items-center gap-2">
@@ -90,16 +90,16 @@ const ChatbotWidget = () => {
           </div>
 
           {/* Chat Area */}
-          <div className="flex-1 p-4 overflow-y-auto bg-gray-50 dark:bg-gray-900 flex flex-col gap-3">
+          <div className="flex-1 p-4 overflow-y-auto bg-gray-50 flex flex-col gap-3">
             {messages.map((msg, index) => (
               <div key={index} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[85%] p-3 rounded-2xl text-sm whitespace-pre-wrap ${msg.sender === 'user' ? 'bg-[#135bec] text-white rounded-br-sm' : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 rounded-bl-sm shadow-sm'}`}>
+                <div className={`max-w-[85%] p-3 rounded-2xl text-sm whitespace-pre-wrap ${msg.sender === 'user' ? 'bg-[#135bec] text-white rounded-br-sm' : 'bg-white border border-gray-200 text-gray-800 rounded-bl-sm shadow-sm'}`}>
                   {msg.text}
                   {msg.image && (
                     <img src={msg.image} alt="Hình ảnh khóa học" className="mt-3 rounded-lg w-full object-cover max-h-40 border border-gray-200 dark:border-gray-600" />
                   )}
                   {msg.link && (
-                    <a href={msg.link} className="inline-block mt-2 text-[#135bec] dark:text-blue-400 font-semibold hover:underline">
+                    <a href={msg.link} className="inline-block mt-2 text-[#135bec] font-semibold hover:underline">
                       Xem chi tiết khóa học &rarr;
                     </a>
                   )}
@@ -124,7 +124,7 @@ const ChatbotWidget = () => {
 
             {loading && (
               <div className="flex justify-start">
-                <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-3 rounded-2xl rounded-bl-sm shadow-sm flex gap-1.5 items-center h-10">
+                <div className="bg-white border border-gray-200 p-3 rounded-2xl rounded-bl-sm shadow-sm flex gap-1.5 items-center h-10">
                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-75"></div>
                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-150"></div>
@@ -135,8 +135,8 @@ const ChatbotWidget = () => {
           </div>
 
           {/* Input Area */}
-          <div className="p-3 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex gap-2">
-            <input type="text" className="flex-1 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-full px-4 py-2 text-sm focus:outline-none focus:border-[#135bec] focus:ring-1 focus:ring-[#135bec] transition-all" placeholder="Nhập câu hỏi của bạn..." value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSendMessage(input)} />
+          <div className="p-3 bg-white border-t border-gray-200 flex gap-2">
+            <input type="text" className="flex-1 border border-gray-300 rounded-full px-4 py-2 text-sm focus:outline-none focus:border-[#135bec] focus:ring-1 focus:ring-[#135bec] transition-all" placeholder="Nhập câu hỏi của bạn..." value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSendMessage(input)} />
             <button onClick={handleSend} disabled={loading} className="bg-[#135bec] text-white w-10 h-10 shrink-0 rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors disabled:bg-gray-400">
               <span className="material-symbols-outlined text-[20px] ml-1">send</span>
             </button>

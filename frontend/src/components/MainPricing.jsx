@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { assets } from '../assets/assets' 
-import FadeIn from './FadeIn'
 import { products } from '../data/products'
 
 const MainPricing = () => {
@@ -57,7 +56,7 @@ const MainPricing = () => {
     if (!isDown || !scrollRef.current) return
     e.preventDefault()
     const x = e.pageX - scrollRef.current.offsetLeft
-    const walk = (x - startX.current) * 1
+    const walk = (x - startX.current) * 1.5 // Tăng hệ số lên 1.5 để kéo nhẹ tay và mượt hơn
     if (Math.abs(walk) > 10) dragged.current = true
     scrollRef.current.scrollLeft = scrollLeftPos.current - walk
   }
@@ -66,15 +65,15 @@ const MainPricing = () => {
     <div className='py-16 sm:py-20'>
       <div className='mx-auto max-w-7xl px-4 sm:px-6 lg:px-8'>
         <div className='mb-12 text-center'>
-            <h2 className='text-3xl font-bold tracking-tight text-[#111318] dark:text-white sm:text-4xl'>
+            <h2 className='text-3xl font-bold tracking-tight text-[#111318] sm:text-4xl'>
                 Các Gói Học Phí Phổ Biến
             </h2>
-            <p className='mt-4 text-lg text-[#616f89] dark:text-gray-400'>
+            <p className='mt-4 text-lg text-[#616f89]'>
                 Lựa chọn hạng bằng phù hợp với nhu cầu của bạn
             </p>
         </div>
 
-        <div className='relative group'>
+        <div className='relative group -mx-4 sm:-mx-6 lg:mx-0'>
           <button 
             onClick={() => scroll('left')}
             className='absolute -left-4 top-1/2 -translate-y-1/2 z-10 hidden md:flex items-center justify-center w-12 h-12 bg-white rounded-full shadow-lg border border-gray-100 text-[#135bec] hover:bg-[#135bec] hover:text-white transition-all opacity-0 group-hover:opacity-100'
@@ -88,44 +87,44 @@ const MainPricing = () => {
             onMouseLeave={handleMouseLeave}
             onMouseUp={handleMouseUp}
             onMouseMove={handleMouseMove}
-            className={`flex overflow-x-auto gap-8 pb-8 pt-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] ${isDown ? 'cursor-grabbing snap-none select-none' : 'cursor-grab snap-x snap-mandatory'}`}
+            className={`flex overflow-x-auto gap-8 pb-8 pt-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] after:content-[''] after:min-w-[1px] after:shrink-0 ${isDown ? 'cursor-grabbing snap-none select-none scroll-auto' : 'cursor-grab snap-x snap-proximity scroll-smooth'}`}
           >
           {courseList.map((product, index) => {
             const isHighlight = product.id.includes('b2') || index === 1
             return (
-              <FadeIn key={product.id} delay={index * 150} className='w-full md:w-[calc(50%-16px)] lg:w-[calc(33.333333%-21.33px)] snap-center shrink-0 flex'>
-                <div className={`w-full cursor-pointer group relative flex flex-col rounded-2xl border ${isHighlight ? 'border-2 border-[#135bec] shadow-xl z-10 transform lg:-translate-y-1' : 'border-gray-200 shadow-sm hover:shadow-xl'} bg-[#ffffff] p-8 transition dark:border-gray-700 dark:bg-surface-dark`}>
+              <div key={product.id} className='w-[calc(50%-16px)] lg:w-[calc(33.333333%-21.33px)] snap-start shrink-0 flex'>
+                <div className={`w-full cursor-pointer group relative flex flex-col rounded-2xl border ${isHighlight ? 'border-2 border-[#135bec] z-10' : 'border-gray-200 hover:border-[#135bec]'} bg-[#ffffff] p-3 sm:p-8 transition-colors`}>
                   {isHighlight && (
-                    <div className='absolute -top-5 left-1/2 -translate-x-1/2 rounded-full bg-[#f97316] px-4 py-1 text-xs font-bold uppercase tracking-wide text-white shadow-sm'>
+                    <div className='absolute -top-2.5 sm:-top-5 left-1/2 -translate-x-1/2 rounded-full bg-[#f97316] px-2 sm:px-4 py-0.5 sm:py-1 text-[9px] sm:text-xs font-bold uppercase tracking-wide text-white shadow-sm whitespace-nowrap'>
                         Phổ biến nhất
                     </div>
                   )}
-                  <div className='mb-6'>
-                      <h3 className='text-lg font-bold text-[#111318] dark:text-white'>{product.title}</h3>
-                      <p className='mt-2 text-sm text-[#616f89] dark:text-gray-400'>{product.description}</p>
+                  <div className='mb-3 sm:mb-6'>
+                      <h3 className='text-sm sm:text-lg font-bold text-[#111318] leading-tight'>{product.title}</h3>
+                      <p className='mt-1 sm:mt-2 text-[11px] sm:text-sm text-[#616f89] line-clamp-2'>{product.description}</p>
                   </div>
-                  <div className='mb-6 flex items-baseline gap-1'>
-                      <span className={`text-4xl font-black tracking-tight ${isHighlight ? 'text-[#135bec]' : 'text-[#111318] dark:text-white'}`}>{product.price}</span>
-                      <span className='text-sm font-semibold text-[#616f89] dark:text-gray-500'>/ khóa</span>
+                  <div className='mb-3 sm:mb-6 flex flex-wrap items-baseline gap-1'>
+                      <span className={`text-base sm:text-4xl font-black tracking-tight ${isHighlight ? 'text-[#135bec]' : 'text-[#111318]'}`}>{product.price}</span>
+                      <span className='text-[9px] sm:text-sm font-semibold text-[#616f89]'>/ khóa</span>
                   </div>
                   <Link 
                     to='/dangkykhoahoc' 
                     state={{ course: product.id, courseName: product.title, imageKey: product.image }} 
                     onClick={(e) => { if (dragged.current) e.preventDefault() }}
-                    className={`cursor-pointer mb-8 w-full rounded-xl py-3 text-sm font-bold transition flex items-center justify-center ${isHighlight ? 'bg-[#135bec] text-white hover:bg-[#135bec]/90' : 'bg-gray-100 text-[#111318] hover:bg-gray-200 dark:bg-gray-800 dark:text-white'}`}
+                    className={`cursor-pointer mb-3 sm:mb-8 w-full rounded-lg sm:rounded-xl py-1.5 sm:py-3 text-[11px] sm:text-sm font-bold transition flex items-center justify-center ${isHighlight ? 'bg-[#135bec] text-white hover:bg-[#135bec]/90' : 'bg-gray-100 text-[#111318] hover:bg-gray-200'}`}
                   >
                       Đăng ký ngay
                   </Link> 
-                  <ul className='flex flex-1 flex-col gap-4'>
+                  <ul className='flex flex-1 flex-col gap-1.5 sm:gap-4'>
                       {product.highlights && product.highlights.map((hl, i) => (
-                        <li key={i} className='flex items-start gap-3 text-sm text-[#616f89] dark:text-gray-300'>
-                            <span className='material-symbols-outlined text-[#135bec]'>check_circle</span>
-                            <span>{hl}</span>
+                        <li key={i} className='flex items-start gap-1 sm:gap-3 text-[11px] sm:text-sm text-[#616f89]'>
+                            <span className='material-symbols-outlined text-[14px] sm:text-[24px] text-[#135bec] shrink-0'>check_circle</span>
+                            <span className='line-clamp-2 leading-tight'>{hl}</span>
                         </li>
                       ))}
                   </ul>
               </div>
-              </FadeIn>
+              </div>
             )
           })}
           </div>

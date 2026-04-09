@@ -5,7 +5,7 @@ const News = () => {
   const [news, setNews] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
   const [searchTerm, setSearchTerm] = useState('')
-  const itemsPerPage = 6 // Số bài viết mỗi trang
+  const itemsPerPage = 8 // Số bài viết mỗi trang
   const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) || 'https://khoahoclaixe.onrender.com'
   const navigate = useNavigate()
 
@@ -66,25 +66,25 @@ const News = () => {
           </div>
         </div>
 
-        <div className='grid gap-8 md:grid-cols-2 lg:grid-cols-3'>
+        <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-8'>
           {currentItems.length > 0 ? (
             currentItems.map((item) => (
-            <div key={item._id} onClick={() => navigate(`/tin_tuc/${item._id}`)} className='flex flex-col overflow-hidden rounded-lg shadow-lg bg-white hover:shadow-xl transition-shadow duration-300 cursor-pointer'>
+            <div key={item._id} onClick={() => navigate(`/tin_tuc/${item._id}`)} className='flex flex-col overflow-hidden rounded-lg border border-gray-200 bg-white hover:border-[#135bec] transition-colors duration-300 cursor-pointer'>
               <div className='flex-shrink-0'>
-                <img className='h-48 w-full object-cover' src={item.image || 'https://via.placeholder.com/400x200?text=No+Image'} alt={item.title} />
+                <img className='h-28 sm:h-48 w-full object-cover' src={item.image || 'https://via.placeholder.com/400x200?text=No+Image'} alt={item.title} />
               </div>
-              <div className='flex-1 bg-white p-6 flex flex-col justify-between'>
+              <div className='flex-1 bg-white p-3 sm:p-6 flex flex-col justify-between'>
                 <div className='flex-1'>
-                  <p className='text-sm font-medium text-[#135bec]'>
+                  <p className='text-[10px] sm:text-sm font-medium text-[#135bec]'>
                     Tin tức
                   </p>
-                  <div className='block mt-2'>
-                    <p className='text-xl font-semibold text-gray-900'>{item.title}</p>
-                    <p className='mt-3 text-base text-gray-500 line-clamp-3'>{item.shortDescription}</p>
+                  <div className='block mt-1 sm:mt-2'>
+                    <p className='text-sm sm:text-xl font-semibold text-gray-900 line-clamp-2'>{item.title}</p>
+                    <p className='mt-1 sm:mt-3 text-[11px] sm:text-base text-gray-500 line-clamp-2 sm:line-clamp-3'>{item.shortDescription}</p>
                   </div>
                 </div>
-                <div className='mt-6 flex items-center'>
-                  <div className='text-sm text-gray-500'>
+                <div className='mt-2 sm:mt-6 flex items-center'>
+                  <div className='text-[10px] sm:text-sm text-gray-500'>
                     <time dateTime={item.createdAt}>{new Date(item.createdAt).toLocaleDateString('vi-VN')}</time>
                   </div>
                 </div>

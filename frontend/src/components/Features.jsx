@@ -20,7 +20,7 @@ const Features = () => {
 
             <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'>
                 {/* Feature 1 */}
-                <SmartLink to="/tiledau" className='group cursor-pointer flex flex-col gap-4 rounded-2xl border border-[#dbdfe6] bg-white p-6 transition-all hover:border-primary hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1'>
+                <SmartLink to="/tiledau" className='group cursor-pointer flex flex-col gap-4 rounded-2xl border border-[#dbdfe6] bg-white p-6 transition-all hover:border-primary'>
                     <div className='flex items-center justify-center w-14 h-14 rounded-full bg-blue-400 text-white group-hover:bg-blue-600 group-hover:text-white transition-colors'>
                         <span className='material-symbols-outlined text-[32px]'>verified</span>
                     </div>
@@ -33,7 +33,7 @@ const Features = () => {
                 </SmartLink>
 
                 {/* Feature 2 */}
-                <SmartLink to="/hethongxetaplai" className='group cursor-pointer flex flex-col gap-4 rounded-2xl border border-[#dbdfe6] bg-white p-6 transition-all hover:border-primary hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1'>
+                <SmartLink to="/hethongxetaplai" className='group cursor-pointer flex flex-col gap-4 rounded-2xl border border-[#dbdfe6] bg-white p-6 transition-all hover:border-primary'>
                     <div className='flex items-center justify-center w-14 h-14 rounded-full bg-blue-400 text-white group-hover:bg-blue-600 group-hover:text-white transition-colors'>
                         <span className='material-symbols-outlined text-[32px]'>directions_car</span>
                     </div>
@@ -46,7 +46,7 @@ const Features = () => {
                 </SmartLink>
 
                 {/* Feature 3 */}
-                <SmartLink to="/giohoc" className='group cursor-pointer flex flex-col gap-4 rounded-2xl border border-[#dbdfe6] bg-white p-6 transition-all hover:border-primary hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1'>
+                <SmartLink to="/giohoc" className='group cursor-pointer flex flex-col gap-4 rounded-2xl border border-[#dbdfe6] bg-white p-6 transition-all hover:border-primary'>
                     <div className='flex items-center justify-center w-14 h-14 rounded-full bg-blue-400 text-white group-hover:bg-blue-600 group-hover:text-white transition-colors'>
                         <span className='material-symbols-outlined text-[32px]'>schedule</span>
                     </div>
@@ -59,7 +59,7 @@ const Features = () => {
                 </SmartLink>
 
                 {/* Feature 4 */}
-                <SmartLink to="/chinhsachhocphi" className='group cursor-pointer flex flex-col gap-4 rounded-2xl border border-[#dbdfe6] bg-white p-6 transition-all hover:border-primary hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1'>
+                <SmartLink to="/chinhsachhocphi" className='group cursor-pointer flex flex-col gap-4 rounded-2xl border border-[#dbdfe6] bg-white p-6 transition-all hover:border-primary'>
                     <div className='flex items-center justify-center w-14 h-14 rounded-full bg-blue-400 text-white group-hover:bg-blue-600 group-hover:text-white transition-colors'>
                         <span className='material-symbols-outlined text-[32px]'>account_balance_wallet</span>
                     </div>

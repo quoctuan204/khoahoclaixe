@@ -72,7 +72,7 @@ const AdminLayout = () => {
             <button onClick={() => setSidebarOpen(true)} className='md:hidden text-gray-600 p-2 rounded-md hover:bg-gray-100 mr-3'>
               <span className='material-symbols-outlined'>menu</span>
             </button>
-            <span className='md:hidden font-black text-[#135bec] text-lg'>ADMIN PANEL</span>
+            <Link to="/" className='md:hidden font-black text-[#135bec] text-lg hover:text-blue-700 transition-colors'>ADMIN PANEL</Link>
           </div>
 
           <div className='flex items-center gap-4'>

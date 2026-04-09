@@ -49,12 +49,12 @@ const Introduce = () => {
                     <h2 className='text-[#111318] text-3xl lg:text-4xl font-black leading-tight mb-4'>
                         Trung tâm Sát hạch Lái xe - Khởi đầu vững chắc
                     </h2>
-                    <p className='text-gray-600 text-lg leading-relaxed mb-4'>
+                <p className='text-gray-800 font-medium text-lg leading-relaxed mb-4'>
                         Được thành lập từ năm 2008, chúng tôi tự hào là một trong những
                         trung tâm đào tạo và sát hạch lái xe hàng đầu khu vực, được Sở 
                         Giao thông Vận tải cấp phép hoạt động.
                     </p>
-                    <p className='text-gray-600 leading-relaxed'>
+                <p className='text-gray-800 font-medium text-lg leading-relaxed'>
                         Với phương châm "An toàn của bạn là hạnh phúc của chúng tôi", 
                         trung tâm không ngừng đầu tư nâng cấp cơ sở vật chất, sân tập 
                         chuẩn ISO và đội ngũ giáo viên tận tâm. Chúng tôi cam kết mang 
@@ -67,14 +67,14 @@ const Introduce = () => {
                         <span className='material-symbols-outlined text-[#135bec] mt-1'>school</span>
                         <div>
                             <h4 className='font-bold text-[#111318]'>Đào tạo chuẩn</h4>
-                            <p className='text-sm text-gray-500'>Giáo trình bám sát quy định mới nhất</p>
+                        <p className='text-sm text-gray-600 font-medium'>Giáo trình bám sát quy định mới nhất</p>
                         </div>
                     </div>
                     <div className='flex items-start gap-3'>
                         <span className='material-symbols-outlined text-[#135bec] mt-1'>directions_car</span>
                         <div>
                             <h4 className='font-bold text-[#111318]'>Xe tập đời mới</h4>
-                            <p className='text-sm text-gray-500'>100% xe tập có máy lạnh, cảm biến</p>
+                        <p className='text-sm text-gray-600 font-medium'>100% xe tập có máy lạnh, cảm biến</p>
                         </div>
                     </div>
                 </div>

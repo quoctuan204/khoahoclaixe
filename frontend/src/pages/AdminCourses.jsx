@@ -114,7 +114,8 @@ const AdminCourses = () => {
       </div>
 
       <div className='bg-white shadow-md rounded-lg overflow-hidden border border-gray-200'>
-        <div className='overflow-x-auto'>
+        {/* Giao diện Desktop (Table) */}
+        <div className='hidden md:block overflow-x-auto'>
           <table className='min-w-full divide-y divide-gray-200'>
             <thead className='bg-gray-50'>
               <tr>
@@ -162,6 +163,42 @@ const AdminCourses = () => {
               ))}
             </tbody>
           </table>
+        </div>
+
+        {/* Giao diện Mobile (Card) đồng bộ với các trang product khác */}
+        <div className='md:hidden flex flex-col divide-y divide-gray-200'>
+          {courses.map((product) => (
+            <div key={product.id} className='p-4 bg-white hover:bg-gray-50 transition-colors'>
+              <div className='flex gap-4 mb-3'>
+                <img src={product.image || undefined} alt={product.title} className='h-20 w-24 object-cover rounded-lg border border-gray-200' />
+                <div className='flex-1'>
+                  <div className='text-base font-bold text-gray-900'>{product.title}</div>
+                  <div className='text-xs text-gray-500 mb-1'>ID: {product.id}</div>
+                  <div className='flex items-center gap-2'>
+                    <div className='text-sm font-bold text-[#135bec]'>{product.price}</div>
+                    {product.oldPrice && <div className='text-xs text-gray-400 line-through'>{product.oldPrice}</div>}
+                  </div>
+                </div>
+              </div>
+              <div className='flex items-center justify-between mb-3 text-sm text-gray-600'>
+                <div className='flex items-center gap-1'><span className="material-symbols-outlined text-[18px]">schedule</span> {product.duration}</div>
+              </div>
+              <div className='flex gap-2'>
+                <button 
+                  onClick={() => navigate(`/admin/courses/${product.id}`)}
+                  className='flex-1 text-[#135bec] bg-blue-50 hover:bg-blue-100 py-2 rounded-lg transition-colors flex items-center justify-center gap-1 font-medium'>
+                  <span className="material-symbols-outlined text-[18px]">edit</span> Sửa
+                </button>
+                {role !== 'staff' && (
+                  <button 
+                    onClick={() => handleDelete(product.id)}
+                    className='flex-1 text-red-600 bg-red-50 hover:bg-red-100 py-2 rounded-lg transition-colors flex items-center justify-center gap-1 font-medium'>
+                    <span className="material-symbols-outlined text-[18px]">delete</span> Xóa
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 

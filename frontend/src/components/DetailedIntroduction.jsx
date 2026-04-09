@@ -2,30 +2,29 @@ import React from 'react'
 
 const DetailedIntroduction = () => {
   return (
-    <div className='relative w-full bg-white dark:bg-background-dark py-16 lg:py-24'>
+    <div className='relative w-full bg-white py-16 lg:py-24'>
       <div className='mx-auto max-w-4xl px-4 sm:px-6 lg:px-8'>
         <div className='flex flex-col items-start text-left mb-10'>
             <span className='text-[#f97316] font-bold uppercase tracking-widest text-sm mb-2'>
                 Giới thiệu
             </span>
-            <h1 className='text-[#111318] dark:text-white text-4xl sm:text-5xl font-extrabold uppercase leading-tight tracking-tight mb-6'>
+            <h1 className='text-[#111318] text-4xl sm:text-5xl font-extrabold uppercase leading-tight tracking-tight mb-6'>
                 SÂN TẬP LÁI XE CẦN ĐƯỚC
             </h1>
             <div className='w-20 h-1.5 bg-[#f97316]/80 rounded-full mb-8'></div>
-            <div className='prose prose-lg dark:prose-invert max-w-none text-[#4b5563] dark:text-gray-300'>
-                <p className='font-medium text-lg mb-6 italic'>
+            <div className='text-gray-900 text-lg leading-relaxed font-medium'>
+                <p className='text-xl mb-6 italic text-[#111318]'>
                     Lời đầu tiên, cho phép chúng tôi gửi tới quý khách những lời chúc an lành và tốt đẹp nhất.
                 </p>
                 <p className='mb-6 leading-relaxed'>
-                    Là một trong những doanh nghiệp tại VN, hoạt động chuyên về lĩnh vực <strong className='text-primary dark:text-blue-
-                    400'>Đào Tạo và Sát Hạch thi lấy GPLX hạng B (Số tự động) hạng B (Số sàn) và hạng C (Tải)</strong>. Sau
+                    Là một trong những doanh nghiệp tại VN, hoạt động chuyên về lĩnh vực <strong className='text-[#135bec] font-black'>Đào Tạo và Sát Hạch thi lấy GPLX hạng B (Số tự động) hạng B (Số sàn) và hạng C (Tải)</strong>. Sau
                     nhiều năm hoạt động, được sự ủng hộ và tin tưởng của quý học viên, Trung tâm Đào Tạo và Sát Hạch lái xe 
                     Hoàng Gia chúng tôi đã không ngừng nỗ lực nâng cao chất lượng đào tạo.
                 </p>
                 <p className='mb-6 leading-relaxed'>
                     Và hiện nay, chúng tôi đã tập trung đầu tư mạnh về phương tiện và thiết bị cảm ứng nhằm phục vụ tốt hơn 
                     nữa trong công tác đào tạo. Đồng thời chúng tôi cũng tiến hành liên kết với rất nhiều đơn vị đào tạo nhằm 
-                    mở rộng quy mô sát hạch. Với mục tiêu <em className='font-bold text-[#111318] dark:text-white'>"Vì quyền 
+                    mở rộng quy mô sát hạch. Với mục tiêu <em className='font-bold text-[#111318]'>"Vì quyền 
                     lợi học tập của quý học viên"</em> chúng tôi luôn nghiên cứu đổi mới quy trình quản lý và đào tạo, giúp 
                     quý học viên học và thi GPLX được dễ dàng.
                 </p>
@@ -43,7 +42,7 @@ const DetailedIntroduction = () => {
                 <p className='mb-6 leading-relaxed'>
                     Tiêu chí hoạt động của chúng tôi là luôn mang lại cho quý học viên đầy đủ các yếu tố sau:
                 </p>
-                <ul className='mb-8 list-disc pl-6 space-y-3'>
+                <ul className='mb-8 list-disc pl-6 space-y-3 font-bold text-[#111318]'>
                     <li>Kỹ năng lái xe và tinh thần đạo đức tốt nhất.</li>
                     <li>Thời gian học tập linh động nhất.</li>
                     <li>Thông thạo Luật Giao thông đường bộ và có ý thức chấp hành tốt.</li>
@@ -70,7 +69,7 @@ const DetailedIntroduction = () => {
                     <p>
                         <strong>EMAIL:</strong>{' '}
                         <a href="daotaosathach@gmail.com"
-                            className='text-primary dark:text-blue-400 underline'>
+                            className='text-[#135bec] font-bold underline'>
                                 daotaosathach@gmail.com
                         </a>
                     </p>

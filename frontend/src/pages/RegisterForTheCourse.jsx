@@ -243,10 +243,10 @@ const RegisterForTheCourse = () => {
             {/* Left Column */}
             <div className='lg:col-span-5 lg:sticky lg:top-24 space-y-8'>
                 <div className='space-y-4'>
-                    <h1 className='text-4xl md:text-5xl font-black tracking-tight text-[#111318] dark:text-white leading-[1.1]'>
+                    <h1 className='text-4xl md:text-5xl font-black tracking-tight text-[#135bec] leading-[1.1]'>
                         Hành trình lái xe an toàn bắt đầu tại đây.
                     </h1>
-                    <p className='text-lg text-[#616f89] dark:text-gray-400 leading-relaxed'>
+                    <p className='text-lg text-[#616f89] leading-relaxed'>
                         Tham gia cộng đồng hơn 5,000 học viên đã tốt nghiệp. Chúng tôi cam kết đào tạo kỹ năng lái xe 
                         vững vàng, tự tin xử lý mọi tình huống.
                     </p>
@@ -263,28 +263,28 @@ const RegisterForTheCourse = () => {
                     {/* Features List */}
                     <ul className='space-y-4'>
                         <li className='flex items-start gap-3'>
-                            <div className='flex-shrink-0 size-6 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400 mt-0.5'>
+                            <div className='flex-shrink-0 size-6 rounded-full bg-green-100 flex items-center justify-center text-green-600 mt-0.5'>
                                 <span className='material-symbols-outlined text-[16px]'>check</span>
                             </div>
-                            <span className='text-[#111318] dark:text-gray-200'>
+                            <span className='text-[#111318]'>
                                 Cam kết không phát sinh chi phí phụ.
                             </span>
                         </li>
 
                         <li className='flex items-start gap-3'>
-                            <div className='flex-shrink-0 size-6 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400 mt-0.5'>
+                            <div className='flex-shrink-0 size-6 rounded-full bg-green-100 flex items-center justify-center text-green-600 mt-0.5'>
                                 <span className='material-symbols-outlined text-[16px]'>check</span>
                             </div>
-                            <span className='text-[#111318] dark:text-gray-200'>
+                            <span className='text-[#111318]'>
                                 Lịch học linh hoạt
                             </span>
                         </li>
 
                         <li className='flex items-start gap-3'>
-                            <div className='flex-shrink-0 size-6 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400 mt-0.5'>
+                            <div className='flex-shrink-0 size-6 rounded-full bg-green-100 flex items-center justify-center text-green-600 mt-0.5'>
                                 <span className='material-symbols-outlined text-[16px]'>check</span>
                             </div>
-                            <span className='text-[#111318] dark:text-gray-200'>
+                            <span className='text-[#111318]'>
                                 Hỗ trợ làm hồ sơ thi sát hạch trọn gói.
                             </span>
                         </li>
@@ -294,12 +294,12 @@ const RegisterForTheCourse = () => {
 
             {/* Right Column */}
             <div className='lg:col-span-7'>
-                <div className='bg-[#ffffff] dark:bg-[#1a2332] rounded-2xl shadow-xl border border-[#dbdfe6] dark:border-[#2a3441] p-6 sm:p-8 lg:p-10'>
-                    <div className='mb-8 border-b border-[#dbdfe6] dark:border-[#2a3441] pb-6'>
-                        <h2 className='text-2xl font-bold text-[#111318] dark:text-white mb-2'>
+                <div className='bg-[#ffffff] rounded-2xl shadow-xl border border-[#dbdfe6] p-6 sm:p-8 lg:p-10'>
+                    <div className='mb-8 border-b border-[#dbdfe6] pb-6'>
+                        <h2 className='text-2xl font-bold text-[#135bec] mb-2'>
                             Thông tin đăng ký
                         </h2>
-                        <p className='text-[#616f89] dark:text-gray-400 text-sm'>
+                        <p className='text-[#616f89] text-sm'>
                             Vui lòng điền đầy đủ thông tin bên dưới để giữ chỗ.
                         </p>
                     </div>
@@ -309,12 +309,12 @@ const RegisterForTheCourse = () => {
                         <div className='grid grid-cols-1 sm:grid-cols-2 gap-6'>
                             <div className='space-y-2'>
                                 <label 
-                                    className='block text-sm font-medium text-[#111318] dark:text-gray-200'
+                                    className='block text-sm font-medium text-[#111318]'
                                     for='lastname'>
                                         Họ <span className='text-red-500'>*</span>
                                 </label>
                                 <input
-                                    className='w-full rounded-lg border-[#dbdfe6] dark:border-[#2a3441] bg-white dark:bg-[#101622]/50 text-[#111318] dark:text-white shadow-sm focus:border-[#135bec] focus:ring-[#135bec] h-12 px-4 placeholder:text-[#616f89]/60'
+                                    className='w-full rounded-lg border-[#dbdfe6] bg-white text-[#111318] shadow-sm focus:border-[#135bec] focus:ring-[#135bec] h-12 px-4 placeholder:text-[#616f89]/60'
                                     id='lastname'
                                     placeholder='Họ'
                                     type="text"
@@ -326,12 +326,12 @@ const RegisterForTheCourse = () => {
 
                             <div className='space-y-2'>
                                 <label 
-                                    className='block text-sm font-medium text-[#111318] dark:text-gray-200'
+                                    className='block text-sm font-medium text-[#111318]'
                                     for='lastname'>
                                         Tên <span className='text-red-500'>*</span>
                                 </label>
                                 <input
-                                    className='w-full rounded-lg border-[#dbdfe6] dark:border-[#2a3441] bg-white dark:bg-[#101622]/50 text-[#111318] dark:text-white shadow-sm focus:border-[#135bec] focus:ring-[#135bec] h-12 px-4 placeholder:text-[#616f89]/60'
+                                    className='w-full rounded-lg border-[#dbdfe6] bg-white text-[#111318] shadow-sm focus:border-[#135bec] focus:ring-[#135bec] h-12 px-4 placeholder:text-[#616f89]/60'
                                     id='firstname'
                                     placeholder='Tên'
                                     type="text"
@@ -345,7 +345,7 @@ const RegisterForTheCourse = () => {
                         {/* Contact Row */}
                         <div className='grid grid-cols-1 sm:grid-cols-2 gap-6'>
                             <div className='space-y-2'>
-                                <label className='block text-sm font-medium text-[#111318] dark:text-gray-200' for='email'>
+                            <label className='block text-sm font-medium text-[#111318]' for='email'>
                                     Email
                                 </label>
                                 <div className='relative'>
@@ -353,7 +353,7 @@ const RegisterForTheCourse = () => {
                                         <span className='material-symbols-outlined text-[20px]'>mail</span>
                                     </div>
                                     <input
-                                        className='w-full rounded-lg border-[#dbdfe6] dark:border-[#2a3441] bg-white dark:bg-[#101622]/50 text-[#111318] dark:text-white shadow-sm focus:border-[#135bec] focus:ring-[#135bec] h-12 pl-10 pr-4 placeholder:text-[#616f89]/60'
+                                    className='w-full rounded-lg border-[#dbdfe6] bg-white text-[#111318] shadow-sm focus:border-[#135bec] focus:ring-[#135bec] h-12 pl-10 pr-4 placeholder:text-[#616f89]/60'
                                         id='email'
                                         placeholder='example@email.com' 
                                         type="email"
@@ -365,7 +365,7 @@ const RegisterForTheCourse = () => {
                             </div>
 
                             <div className='space-y-2'>
-                                <label className='block text-sm font-medium text-[#111318] dark:text-gray-200' for='email'>
+                            <label className='block text-sm font-medium text-[#111318]' for='email'>
                                     Số điện thoại <span className='text-red-500'>*</span>
                                 </label>
                                 <div className='relative'>
@@ -373,7 +373,7 @@ const RegisterForTheCourse = () => {
                                         <span className='material-symbols-outlined text-[20px]'>call</span>
                                     </div>
                                     <input
-                                        className='w-full rounded-lg border-[#dbdfe6] dark:border-[#2a3441] bg-white dark:bg-[#101622]/50 text-[#111318] dark:text-white shadow-sm focus:border-[#135bec] focus:ring-[#135bec] h-12 pl-10 pr-4 placeholder:text-[#616f89]/60'
+                                    className='w-full rounded-lg border-[#dbdfe6] bg-white text-[#111318] shadow-sm focus:border-[#135bec] focus:ring-[#135bec] h-12 pl-10 pr-4 placeholder:text-[#616f89]/60'
                                         id='phone'
                                         placeholder='+84'
                                         type="tel"
@@ -385,37 +385,83 @@ const RegisterForTheCourse = () => {
                             </div>
                         </div>
 
-                        {/* Course Selection */}
-                        <div className='space-y-2'>
-                            <label className='block text-sm font-medium text-[#111318] dark:text-gray-200' for='course'>
-                                Chọn khóa học
-                            </label>
-                            <div className='relative'>
-                                <select 
-                                    className='w-full appearance-none rounded-lg border-[#dbdfe6] dark:border-[#2a3441] bg-white dark:bg-[#101622]/50 text-[#111318] dark:text-white shadow-sm focus:border-[#135bec] focus:ring-[#135bec] h-14 px-4 pr-10' 
-                                    id="course" value={selectedCourse} onChange={handleCourseChange}
-                                    required>
-                                        <option disabled value="">Vui lòng chọn khóa học...</option>
-                                        {products.map(p => (
-                                            <option key={p.id} value={p.id}>{p.title}</option>
+                        {/* Course Selection - Card Style for Mobile */}
+                        <div className="space-y-2">
+                      <label className="block text-sm font-medium text-[#111318] mb-2">
+                            Chọn khóa học
+                          </label>
+                          <div className="flex flex-col gap-4 md:hidden">
+                            {products.map((p) => {
+                              const isSelected = selectedCourse === p.id
+                              return (
+                                <button
+                                  type="button"
+                                  key={p.id}
+                                  onClick={() => {
+                                    setSelectedCourse(p.id)
+                                    setSelectedCourseName(p.title)
+                                    setImageSrc(p.image || assets.b1sotudong)
+                                    setFormData(prev => ({ ...prev, course: p.id }))
+                                  }}
+                              className={`flex items-center gap-4 rounded-xl border-2 px-3 py-3 transition-all shadow-sm ${isSelected ? 'border-[#135bec] bg-blue-50' : 'border-gray-200 bg-white'} ${p.isVisible === false ? 'opacity-60 grayscale cursor-not-allowed' : 'cursor-pointer hover:shadow-lg'}`}
+                                  disabled={p.isVisible === false}
+                                >
+                                  <img src={p.image || assets.b1sotudong} alt={p.title} className="w-16 h-16 object-cover rounded-lg border border-gray-100" />
+                                  <div className="flex-1 text-left">
+                                    <div className="flex items-center gap-2 mb-1">
+                                  <span className="font-bold text-base text-[#111318]">{p.title}</span>
+                                      {p.id === 'b1-sotudong' && (
+                                        <span className="bg-[#f97316] text-white text-xs font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">Phổ biến</span>
+                                      )}
+                                    </div>
+                                <div className="text-xs text-gray-500 line-clamp-2">{p.description}</div>
+                                    <div className="flex items-center gap-2 mt-1">
+                                      <span className="text-[#135bec] font-bold">{p.price}</span>
+                                      {p.oldPrice && <span className="text-xs text-gray-400 line-through">{p.oldPrice}</span>}
+                                    </div>
+                                    {p.highlights && p.highlights.length > 0 && (
+                                      <ul className="flex flex-wrap gap-1 mt-1">
+                                        {p.highlights.slice(0,2).map((h, i) => (
+                                          <li key={i} className="inline-flex items-center gap-1 text-xs text-green-600 bg-green-50 rounded px-2 py-0.5">
+                                            <span className="material-symbols-outlined text-[16px]">check</span>{h}
+                                          </li>
                                         ))}
-                                </select>
-                                <div className='absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-[#616f89]'>
-                                    <span className='material-symbols-outlined text-[24px]'>
-                                        expand_more
-                                    </span>
-                                </div>
+                                      </ul>
+                                    )}
+                                  </div>
+                                  {isSelected && <span className="material-symbols-outlined text-[#135bec] text-2xl ml-2">check_circle</span>}
+                                </button>
+                              )
+                            })}
+                          </div>
+                          {/* Desktop vẫn dùng select truyền thống */}
+                          <div className="relative hidden md:block">
+                            <select
+                          className="w-full appearance-none rounded-lg border-[#dbdfe6] bg-white text-[#111318] shadow-sm focus:border-[#135bec] focus:ring-[#135bec] h-14 px-4 pr-10"
+                              id="course"
+                              value={selectedCourse}
+                              onChange={handleCourseChange}
+                              required
+                            >
+                              <option disabled value="">Vui lòng chọn khóa học...</option>
+                              {products.map(p => (
+                                <option key={p.id} value={p.id}>{p.title}</option>
+                              ))}
+                            </select>
+                            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-[#616f89]">
+                              <span className="material-symbols-outlined text-[24px]">expand_more</span>
                             </div>
+                          </div>
                         </div>
 
                         {/* Address & ID */}
                         <div className='grid grid-cols-1 sm:grid-cols-2 gap-6'>
                             <div className='space-y-2'>
-                                <label className='block text-sm font-medium text-[#111318] dark:text-gray-200' for='cccd'>
+                            <label className='block text-sm font-medium text-[#111318]' for='cccd'>
                                     Số CCCD/CMND
                                 </label>
                                 <input
-                                    className='w-full rounded-lg border-[#dbdfe6] dark:border-[#2a3441] bg-white dark:bg-[#101622]/50 text-[#111318] dark:text-white shadow-sm focus:border-[#135bec] focus:ring-[#135bec] h-12 px-4 placeholder:text-[#616f89]/60'
+                                className='w-full rounded-lg border-[#dbdfe6] bg-white text-[#111318] shadow-sm focus:border-[#135bec] focus:ring-[#135bec] h-12 px-4 placeholder:text-[#616f89]/60'
                                     id='cccd'
                                     placeholder='cccd/cmnd'
                                     type="text"
@@ -425,13 +471,13 @@ const RegisterForTheCourse = () => {
                             </div>
 
                             <div className='space-y-2'>
-                                <label className='block text-sm font-medium text-[#111318] dark:text-gray-200' for='cccd'>
+                            <label className='block text-sm font-medium text-[#111318]' for='cccd'>
                                     Địa chỉ thường trú
                                 </label>
                                 <div className='grid grid-cols-1 sm:grid-cols-3 gap-4'>
                                     <div className='relative'>
                                         <select
-                                            className='w-full appearance-none rounded-lg border-[#dbdfe6] dark:border-[#2a3441] bg-white dark:bg-[#101622]/50 text-[#111318] dark:text-white shadow-sm focus:border-[#135bec] focus:ring-[#135bec] h-12 px-4 pr-8'
+                                        className='w-full appearance-none rounded-lg border-[#dbdfe6] bg-white text-[#111318] shadow-sm focus:border-[#135bec] focus:ring-[#135bec] h-12 px-4 pr-8'
                                             value={selectedProvince}
                                             onChange={(e) => setSelectedProvince(e.target.value)}
                                         >
@@ -444,7 +490,7 @@ const RegisterForTheCourse = () => {
                                     </div>
                                     <div className='relative'>
                                         <select
-                                            className='w-full appearance-none rounded-lg border-[#dbdfe6] dark:border-[#2a3441] bg-white dark:bg-[#101622]/50 text-[#111318] dark:text-white shadow-sm focus:border-[#135bec] focus:ring-[#135bec] h-12 px-4 pr-8'
+                                        className='w-full appearance-none rounded-lg border-[#dbdfe6] bg-white text-[#111318] shadow-sm focus:border-[#135bec] focus:ring-[#135bec] h-12 px-4 pr-8'
                                             value={selectedDistrict}
                                             onChange={(e) => setSelectedDistrict(e.target.value)}
                                             disabled={!selectedProvince}
@@ -458,7 +504,7 @@ const RegisterForTheCourse = () => {
                                     </div>
                                     <div className='relative'>
                                         <select
-                                            className='w-full appearance-none rounded-lg border-[#dbdfe6] dark:border-[#2a3441] bg-white dark:bg-[#101622]/50 text-[#111318] dark:text-white shadow-sm focus:border-[#135bec] focus:ring-[#135bec] h-12 px-4 pr-8'
+                                        className='w-full appearance-none rounded-lg border-[#dbdfe6] bg-white text-[#111318] shadow-sm focus:border-[#135bec] focus:ring-[#135bec] h-12 px-4 pr-8'
                                             value={selectedWard}
                                             onChange={(e) => setSelectedWard(e.target.value)}
                                             disabled={!selectedDistrict}
@@ -476,11 +522,11 @@ const RegisterForTheCourse = () => {
 
                         {/* Additional Note (Optional) */}
                         <div className='space-y-2'>
-                            <label className='block text-sm font-medium text-[#111318] dark:text-gray-200' for='note'>
+                        <label className='block text-sm font-medium text-[#111318]' for='note'>
                                 Ghi chú thêm
                             </label>
                             <textarea 
-                                className='w-full rounded-lg border-[#dbdfe6] dark:border-[#2a3441] bg-white dark:bg-[#101622]/50 text-[#111318] dark:text-white shadow-sm focus:border-[#135bec] focus:ring-[#135bec] px-4 py-3 placeholder:text-[#616f89]/60 resize-none'
+                            className='w-full rounded-lg border-[#dbdfe6] bg-white text-[#111318] shadow-sm focus:border-[#135bec] focus:ring-[#135bec] px-4 py-3 placeholder:text-[#616f89]/60 resize-none'
                                 id='note'
                                 placeholder='Ví dụ: Tôi muốn học vào cuối tuần...'
                                 rows="3"
@@ -502,7 +548,7 @@ const RegisterForTheCourse = () => {
                                         </span>
                                         {loading ? 'Đang xử lý...' : 'Đăng ký ngay'}
                                     </button>
-                                    <p className='mt-4 text-center text-xs text-[#616f89] dark:text-gray-400'>
+                                <p className='mt-4 text-center text-xs text-[#616f89]'>
                                         Bằng việc nhấp vào nút Đăng ký, bạn đồng ý với <a className='text-[#135bec] hover:underline' href="#">Điều khoản dịch vụ</a> và <a className='text-[#135bec] hover:underline' href="#">Chính sách bảo mật</a> của chúng tôi.
                                     </p>
                                 </>

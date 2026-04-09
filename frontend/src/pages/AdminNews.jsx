@@ -100,33 +100,74 @@ const AdminNews = () => {
       </div>
 
       <div className='bg-white shadow-md rounded-lg overflow-hidden border border-gray-200'>
-        <table className='min-w-full divide-y divide-gray-200'>
-          <thead className='bg-gray-50'>
-            <tr>
-              <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase'>Hình ảnh</th>
-              <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase'>Tiêu đề</th>
-              <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase'>Ngày tạo</th>
-              <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase'>Hành động</th>
-            </tr>
-          </thead>
-          <tbody className='bg-white divide-y divide-gray-200'>
-            {news.map(item => (
-              <tr key={item._id} className='hover:bg-gray-50'>
-                <td className='px-6 py-4 whitespace-nowrap'>
-                  {item.image && <img src={item.image} alt="" className='h-12 w-20 object-cover rounded border' />}
-                </td>
-                <td className='px-6 py-4 font-medium text-gray-900'>{item.title}</td>
-                <td className='px-6 py-4 text-gray-500 text-sm'>{new Date(item.createdAt).toLocaleDateString('vi-VN')}</td>
-                <td className='px-6 py-4 whitespace-nowrap text-sm font-medium'>
-                  <button onClick={() => navigate(`/admin/news/${item._id}`)} className='text-blue-600 hover:text-blue-900 mr-4'>Sửa</button>
-                  {role !== 'staff' && (
-                    <button onClick={() => handleDelete(item._id)} className='text-red-600 hover:text-red-900'>Xóa</button>
-                  )}
-                </td>
+        {/* Giao diện Desktop (Table) */}
+        <div className='hidden md:block overflow-x-auto'>
+          <table className='min-w-full divide-y divide-gray-200'>
+            <thead className='bg-gray-50'>
+              <tr>
+                <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase'>Hình ảnh</th>
+                <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase'>Tiêu đề</th>
+                <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase'>Ngày tạo</th>
+                <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase'>Hành động</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className='bg-white divide-y divide-gray-200'>
+              {news.map(item => (
+                <tr key={item._id} className='hover:bg-gray-50'>
+                  <td className='px-6 py-4 whitespace-nowrap'>
+                    {item.image && <img src={item.image} alt="" className='h-12 w-20 object-cover rounded border' />}
+                  </td>
+                  <td className='px-6 py-4 font-medium text-gray-900'>{item.title}</td>
+                  <td className='px-6 py-4 text-gray-500 text-sm'>{new Date(item.createdAt).toLocaleDateString('vi-VN')}</td>
+                  <td className='px-6 py-4 whitespace-nowrap text-sm font-medium'>
+                    <button onClick={() => navigate(`/admin/news/${item._id}`)} className='text-[#135bec] bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 inline-flex mr-2'>
+                      <span className="material-symbols-outlined text-[18px]">edit</span> Sửa
+                    </button>
+                    {role !== 'staff' && (
+                      <button onClick={() => handleDelete(item._id)} className='text-red-600 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 inline-flex'>
+                        <span className="material-symbols-outlined text-[18px]">delete</span> Xóa
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Giao diện Mobile (Card) */}
+        <div className='md:hidden flex flex-col divide-y divide-gray-200'>
+          {news.map(item => (
+            <div key={item._id} className='p-4 bg-white hover:bg-gray-50 transition-colors'>
+              <div className='flex gap-4 mb-3'>
+                {item.image ? (
+                  <img src={item.image} alt="" className='h-20 w-24 object-cover rounded-lg border border-gray-200 shrink-0' />
+                ) : (
+                  <div className='h-20 w-24 bg-gray-100 rounded-lg border border-gray-200 shrink-0 flex items-center justify-center text-gray-400'>
+                    <span className="material-symbols-outlined">image</span>
+                  </div>
+                )}
+                <div className='flex-1'>
+                  <div className='text-sm font-bold text-gray-900 line-clamp-2 mb-1'>{item.title}</div>
+                  <div className='text-xs text-gray-500 flex items-center gap-1 mt-2'>
+                    <span className="material-symbols-outlined text-[14px]">calendar_today</span>
+                    {new Date(item.createdAt).toLocaleDateString('vi-VN')}
+                  </div>
+                </div>
+              </div>
+              <div className='flex gap-2 pt-3 border-t border-gray-100'>
+                <button onClick={() => navigate(`/admin/news/${item._id}`)} className='flex-1 text-[#135bec] bg-blue-50 hover:bg-blue-100 py-2 rounded-lg transition-colors flex items-center justify-center gap-1 font-medium text-sm'>
+                  <span className="material-symbols-outlined text-[18px]">edit</span> Sửa
+                </button>
+                {role !== 'staff' && (
+                  <button onClick={() => handleDelete(item._id)} className='flex-1 text-red-600 bg-red-50 hover:bg-red-100 py-2 rounded-lg transition-colors flex items-center justify-center gap-1 font-medium text-sm'>
+                    <span className="material-symbols-outlined text-[18px]">delete</span> Xóa
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Delete Confirmation Modal */}
