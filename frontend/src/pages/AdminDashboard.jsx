@@ -28,6 +28,16 @@ const AdminDashboard = () => {
   
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deleteId, setDeleteId] = useState(null)
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [courses, setCourses] = useState([])
+  const [adding, setAdding] = useState(false)
+  const [addForm, setAddForm] = useState({
+    firstName: '', lastName: '', phone: '', email: '', course: '', cccd: '', address: '', note: ''
+  })
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/products`).then(res => res.json()).then(data => { if (Array.isArray(data)) setCourses(data.filter(p => p.isVisible !== false)) }).catch(console.error)
+  }, [API_BASE])
 
   useEffect(() => {
     const fetchRegistrations = async () => {
@@ -105,6 +115,45 @@ const AdminDashboard = () => {
     } finally {
       setShowDeleteModal(false)
       setDeleteId(null)
+    }
+  }
+
+  const handleAddStudent = async (e) => {
+    e.preventDefault()
+    setAdding(true)
+    try {
+      const selectedCourseObj = courses.find(c => c.id === addForm.course)
+      const dataToSend = {
+        ...addForm,
+        courseName: selectedCourseObj ? selectedCourseObj.title : ''
+      }
+
+      const res = await fetch(`${API_BASE}/api/register-course`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dataToSend)
+      })
+
+      if (res.ok) {
+        toast.success('Thêm học viên thành công')
+        setShowAddModal(false)
+        setAddForm({ firstName: '', lastName: '', phone: '', email: '', course: '', cccd: '', address: '', note: '' })
+        
+        // Refresh danh sách
+        const refreshRes = await fetch(`${API_BASE}/api/registrations`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        if (refreshRes.ok) {
+          setRegistrations(await refreshRes.json())
+        }
+      } else {
+        const errorData = await res.json().catch(() => ({}))
+        toast.error(errorData.message || 'Thêm thất bại')
+      }
+    } catch {
+      toast.error('Lỗi kết nối')
+    } finally {
+      setAdding(false)
     }
   }
 
@@ -240,11 +289,32 @@ const AdminDashboard = () => {
   const currentItems = filteredRegistrations.slice(indexOfFirstItem, indexOfLastItem)
   const totalPages = Math.ceil(filteredRegistrations.length / itemsPerPage)
 
-  const stats = [
-    { name: 'Hạng B1', count: registrations.filter(r => r.course === 'b1').length, fill: '#22c55e' },
-    { name: 'Hạng B2', count: registrations.filter(r => r.course === 'b2').length, fill: '#3b82f6' },
-    { name: 'Hạng C', count: registrations.filter(r => r.course === 'c').length, fill: '#eab308' },
-  ]
+  // Tự động gom nhóm thống kê dựa trên danh sách khóa học thực tế
+  const chartColors = ['#3b82f6', '#22c55e', '#eab308', '#f97316', '#a855f7', '#ec4899', '#14b8a6'];
+  const statsMap = {};
+
+  // Khởi tạo trước các khóa học đang mở bán với số lượng = 0
+  courses.forEach(c => {
+    statsMap[c.id] = { name: c.title, count: 0 };
+  });
+
+  // Đếm số lượng học viên theo từng khóa
+  registrations.forEach(r => {
+    const courseId = r.course;
+    if (statsMap[courseId]) {
+      statsMap[courseId].count += 1;
+    } else {
+      // Xử lý các mã khóa học cũ (b1, b2, c) hoặc đã bị xóa
+      let oldName = r.courseName || (courseId === 'b1' ? 'Hạng B1' : courseId === 'b2' ? 'Hạng B2' : courseId === 'c' ? 'Hạng C' : courseId || 'Khác');
+      if (!statsMap[courseId]) statsMap[courseId] = { name: oldName, count: 0 };
+      statsMap[courseId].count += 1;
+    }
+  });
+
+  const stats = Object.values(statsMap).map((stat, index) => ({
+    ...stat,
+    fill: chartColors[index % chartColors.length]
+  }));
 
   const pieData = [
     { name: 'Đã liên hệ', value: registrations.filter(r => r.status === 'contacted').length, fill: '#22c55e' },
@@ -286,6 +356,12 @@ const AdminDashboard = () => {
                 <span className='bg-blue-100 text-blue-800 text-sm font-medium px-3 py-2 rounded-lg whitespace-nowrap flex items-center'>
                   {filteredRegistrations.length} hồ sơ
             </span>
+            <button 
+              onClick={() => setShowAddModal(true)}
+              className='bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-3 py-2 rounded-lg flex items-center gap-1 transition-colors whitespace-nowrap'
+            >
+              <span className="material-symbols-outlined text-[20px]">person_add</span> Thêm HV
+            </button>
             <button 
               onClick={handleExportExcel}
                   className='bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-3 py-2 rounded-lg flex items-center gap-1 transition-colors whitespace-nowrap'>
@@ -612,6 +688,98 @@ const AdminDashboard = () => {
         title="Xóa hồ sơ học viên"
         message={<>Bạn có chắc chắn muốn xóa hồ sơ này không? <br/>Hành động này không thể hoàn tác.</>}
       />
+
+      {/* Add Student Modal */}
+      {showAddModal && (
+        <div className='fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4'>
+          <div className='bg-white rounded-lg p-6 w-full max-w-2xl shadow-xl max-h-[90vh] overflow-y-auto'>
+            <h3 className='text-xl font-bold mb-4 text-gray-900'>Thêm học viên mới</h3>
+            <form onSubmit={handleAddStudent} className='flex flex-col gap-4'>
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-1'>Họ *</label>
+                  <input 
+                    className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none'
+                    value={addForm.lastName}
+                    onChange={e => setAddForm({...addForm, lastName: e.target.value})}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-1'>Tên *</label>
+                  <input 
+                    className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none'
+                    value={addForm.firstName}
+                    onChange={e => setAddForm({...addForm, firstName: e.target.value})}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-1'>Số điện thoại *</label>
+                  <input 
+                    className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none'
+                    value={addForm.phone}
+                    onChange={e => setAddForm({...addForm, phone: e.target.value})}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-1'>Email</label>
+                  <input 
+                    type="email"
+                    className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none'
+                    value={addForm.email}
+                    onChange={e => setAddForm({...addForm, email: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-1'>Khóa học *</label>
+                  <select 
+                    className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none bg-white'
+                    value={addForm.course}
+                    onChange={e => setAddForm({...addForm, course: e.target.value})}
+                    required
+                  >
+                    <option value="" disabled>Chọn khóa học</option>
+                    {courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-1'>CCCD</label>
+                  <input 
+                    className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none'
+                    value={addForm.cccd}
+                    onChange={e => setAddForm({...addForm, cccd: e.target.value})}
+                  />
+                </div>
+                <div className='md:col-span-2'>
+                  <label className='block text-sm font-medium text-gray-700 mb-1'>Địa chỉ</label>
+                  <input 
+                    className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none'
+                    value={addForm.address}
+                    onChange={e => setAddForm({...addForm, address: e.target.value})}
+                  />
+                </div>
+                <div className='md:col-span-2'>
+                  <label className='block text-sm font-medium text-gray-700 mb-1'>Ghi chú</label>
+                  <textarea 
+                    className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none'
+                    rows="2"
+                    value={addForm.note}
+                    onChange={e => setAddForm({...addForm, note: e.target.value})}
+                  />
+                </div>
+              </div>
+              <div className='flex justify-end gap-3 mt-4 pt-4 border-t border-gray-100'>
+                <button type="button" onClick={() => setShowAddModal(false)} className='px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium transition-colors'>Hủy</button>
+                <button type="submit" disabled={adding} className='px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold disabled:opacity-50 shadow-md transition-colors'>
+                  {adding ? 'Đang lưu...' : 'Thêm học viên'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

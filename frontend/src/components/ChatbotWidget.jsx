@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 
 const ChatbotWidget = () => {
   const [isOpen, setIsOpen] = useState(() => {
@@ -13,6 +14,8 @@ const ChatbotWidget = () => {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef(null);
+  const chatbotRef = useRef(null);
+  const location = useLocation();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -26,6 +29,28 @@ const ChatbotWidget = () => {
     sessionStorage.setItem('chatbotMessages', JSON.stringify(messages));
     scrollToBottom();
   }, [messages]);
+
+  // Tự động đóng chatbot khi chuyển trang
+  useEffect(() => {
+    setIsOpen(false);
+  }, [location.pathname]);
+
+  // Tự động đóng chatbot khi click hoặc chạm ra ngoài vùng chat
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (chatbotRef.current && !chatbotRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('touchstart', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [isOpen]);
 
   const handleSendMessage = async (text) => {
     if (!text.trim()) return;
@@ -77,7 +102,7 @@ const ChatbotWidget = () => {
   return (
     <div className="fixed bottom-6 right-6 z-50">
       {isOpen ? (
-        <div className="w-80 sm:w-96 h-[500px] bg-white rounded-2xl shadow-2xl flex flex-col border border-[#dbdfe6] overflow-hidden">
+        <div ref={chatbotRef} className="w-80 sm:w-96 h-[500px] bg-white rounded-2xl shadow-2xl flex flex-col border border-[#dbdfe6] overflow-hidden shadow-black/20">
           {/* Header */}
           <div className="bg-[#135bec] text-white p-4 flex justify-between items-center shadow-md z-10">
             <div className="flex items-center gap-2">
