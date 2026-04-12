@@ -1,4 +1,4 @@
-import logo from './logo.png';
+import logo from './logo.jpg';
 import menuIcon from './menu-icon.png';
 import heroImg from './hero_img.png';
 import heroImg2 from './hero_img_2.png';

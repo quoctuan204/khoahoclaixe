@@ -49,10 +49,10 @@ const Navbar = () => {
             <img
               src={assets.logo}
               className="w-14 h-auto object-contain"
-              alt="Logo Trường đào tạo sát hạch"
+              alt="Logo Đào tạo lái xe"
             />
             <span className="ml-2 text-sm hidden sm:inline">
-              Trường đào tạo sát hạch
+              Đào tạo lái xe
             </span>
           </a>
         </div>
