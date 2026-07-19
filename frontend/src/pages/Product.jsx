@@ -14,37 +14,37 @@ const Product = () => {
     const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) || 'https://khoahoclaixe.onrender.com'
 
     useEffect(() => {
-      let cancelled = false
-      const load = async () => {
-        // Lấy dữ liệu tĩnh làm gốc
-        const pLocal = products.find(x => x.id === productId)
+        let cancelled = false
+        const load = async () => {
+            // Lấy dữ liệu tĩnh làm gốc
+            const pLocal = products.find(x => x.id === productId)
 
-        try {
-          const r = await fetch(`${API_BASE}/api/products/${productId}`)
-          if (r.ok) {
-            const pDb = await r.json()
-            
-            // Gộp dữ liệu: DB đè lên Local (để giữ lại các trường DB không có như highlights, images nếu chưa update)
-            const merged = pLocal ? { ...pLocal, ...pDb } : pDb
+            try {
+                const r = await fetch(`${API_BASE}/api/products/${productId}`)
+                if (r.ok) {
+                    const pDb = await r.json()
 
-            // if image is a server path, prefix with API base
-            if (merged.image && typeof merged.image === 'string' && merged.image.startsWith('/uploads/')) {
-              merged.image = `${API_BASE}${merged.image}`
+                    // Gộp dữ liệu: DB đè lên Local (để giữ lại các trường DB không có như highlights, images nếu chưa update)
+                    const merged = pLocal ? { ...pLocal, ...pDb } : pDb
+
+                    // if image is a server path, prefix with API base
+                    if (merged.image && typeof merged.image === 'string' && merged.image.startsWith('/uploads/')) {
+                        merged.image = `${API_BASE}${merged.image}`
+                    }
+                    if (!cancelled) setProduct(merged)
+                    return
+                }
+                // eslint-disable-next-line no-unused-vars
+            } catch (err) {
+                // ignore and fall back
             }
-            if (!cancelled) setProduct(merged)
-            return
-          }
-        // eslint-disable-next-line no-unused-vars
-        } catch (err) {
-          // ignore and fall back
+
+            // fallback to local static list
+            if (!cancelled) setProduct(pLocal || null)
         }
 
-        // fallback to local static list
-        if (!cancelled) setProduct(pLocal || null)
-      }
-
-      load()
-      return () => { cancelled = true }
+        load()
+        return () => { cancelled = true }
     }, [API_BASE, productId])
 
     const [editing, setEditing] = useState(false)
@@ -58,30 +58,30 @@ const Product = () => {
     const [isDragging, setIsDragging] = useState(false)
 
     useEffect(() => {
-      setNewTitle(product?.title || '')
-      setNewDesc(product?.description || '')
-      setNewPrice(product?.price || '')
-      setNewOldPrice(product?.oldPrice || '')
+        setNewTitle(product?.title || '')
+        setNewDesc(product?.description || '')
+        setNewPrice(product?.price || '')
+        setNewOldPrice(product?.oldPrice || '')
     }, [product])
 
     useEffect(() => {
-      return () => {
-        if (preview) URL.revokeObjectURL(preview)
-      }
+        return () => {
+            if (preview) URL.revokeObjectURL(preview)
+        }
     }, [preview])
 
     // Tối ưu SEO: Cập nhật Title và Meta Description động
     useEffect(() => {
-      if (product) {
-        document.title = `${product.title} | Trung tâm đào tạo lái xe`
-        let metaDesc = document.querySelector('meta[name="description"]')
-        if (!metaDesc) {
-          metaDesc = document.createElement('meta')
-          metaDesc.name = 'description'
-          document.head.appendChild(metaDesc)
+        if (product) {
+            document.title = `${product.title} | Trung tâm đào tạo lái xe`
+            let metaDesc = document.querySelector('meta[name="description"]')
+            if (!metaDesc) {
+                metaDesc = document.createElement('meta')
+                metaDesc.name = 'description'
+                document.head.appendChild(metaDesc)
+            }
+            metaDesc.content = product.description || `Khóa học ${product.title} chất lượng cao, cam kết đầu ra.`
         }
-        metaDesc.content = product.description || `Khóa học ${product.title} chất lượng cao, cam kết đầu ra.`
-      }
     }, [product])
 
     // Scroll Spy: Theo dõi vị trí cuộn để active tab
@@ -93,7 +93,7 @@ const Product = () => {
             const loTrinh = document.getElementById('lo-trinh')
             const hocPhi = document.getElementById('hoc-phi')
             const hoSo = document.getElementById('ho-so')
-            
+
             if (hoSo && scrollPosition >= hoSo.offsetTop) {
                 setActiveTab('ho-so')
             } else if (hocPhi && scrollPosition >= hocPhi.offsetTop) {
@@ -112,101 +112,101 @@ const Product = () => {
     const { token } = useAuth()
 
     const saveEdits = async () => {
-      setUploading(true)
+        setUploading(true)
 
-      try {
-        if (!token) throw new Error('Not authenticated')
+        try {
+            if (!token) throw new Error('Not authenticated')
 
-        let finalImage = product.image
-        if (imageFile) {
-          const formData = new FormData()
-          formData.append('image', imageFile)
-          const uploadRes = await fetch(`${API_BASE}/api/upload`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData })
-          if (!uploadRes.ok) {
-            const errData = await uploadRes.json().catch(() => ({}));
-            throw new Error(errData.message || 'Lỗi tải ảnh lên server');
-          }
-          const uploadJson = await uploadRes.json()
-          if (uploadJson.imageUrl) {
-            finalImage = uploadJson.imageUrl.startsWith('http') ? uploadJson.imageUrl : `${API_BASE}${uploadJson.imageUrl}`
-          }
+            let finalImage = product.image
+            if (imageFile) {
+                const formData = new FormData()
+                formData.append('image', imageFile)
+                const uploadRes = await fetch(`${API_BASE}/api/upload`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData })
+                if (!uploadRes.ok) {
+                    const errData = await uploadRes.json().catch(() => ({}));
+                    throw new Error(errData.message || 'Lỗi tải ảnh lên server');
+                }
+                const uploadJson = await uploadRes.json()
+                if (uploadJson.imageUrl) {
+                    finalImage = uploadJson.imageUrl.startsWith('http') ? uploadJson.imageUrl : `${API_BASE}${uploadJson.imageUrl}`
+                }
+            }
+
+            // optimistic update
+            setProduct(prev => ({ ...prev, title: newTitle, description: newDesc, price: newPrice, oldPrice: newOldPrice, image: finalImage }))
+
+            const r = await fetch(`${API_BASE}/api/products/${product.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                body: JSON.stringify({
+                    title: newTitle,
+                    description: newDesc,
+                    price: newPrice,
+                    oldPrice: newOldPrice,
+                    image: finalImage.replace(API_BASE, '') // Lưu đường dẫn tương đối
+                })
+            })
+            if (!r.ok) {
+                const j = await r.json().catch(() => ({}))
+                throw new Error(j.message || 'Update failed')
+            }
+            // response contains updated product if needed
+            const updated = await r.json()
+            setProduct(updated)
+            setEditing(false)
+        } catch (err) {
+            console.error('Save edits failed', err)
+            // optionally show notification
+        } finally {
+            setUploading(false)
         }
-
-        // optimistic update
-        setProduct(prev => ({ ...prev, title: newTitle, description: newDesc, price: newPrice, oldPrice: newOldPrice, image: finalImage }))
-        
-        const r = await fetch(`${API_BASE}/api/products/${product.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ 
-            title: newTitle, 
-            description: newDesc,
-            price: newPrice,
-            oldPrice: newOldPrice,
-            image: finalImage.replace(API_BASE, '') // Lưu đường dẫn tương đối
-          })
-        })
-        if (!r.ok) {
-          const j = await r.json().catch(() => ({}))
-          throw new Error(j.message || 'Update failed')
-        }
-        // response contains updated product if needed
-        const updated = await r.json()
-        setProduct(updated)
-        setEditing(false)
-      } catch (err) {
-        console.error('Save edits failed', err)
-        // optionally show notification
-      } finally {
-        setUploading(false)
-      }
     }
 
     const validateFile = (file) => {
-      const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
-      if (!validTypes.includes(file.type)) {
-        toast.error('Định dạng file không hợp lệ. Vui lòng chọn ảnh (JPEG, PNG, GIF, WEBP).')
-        return false
-      }
-      if (file.size > 5 * 1024 * 1024) { // 5MB
-        toast.error('Kích thước ảnh quá lớn. Vui lòng chọn ảnh dưới 5MB.')
-        return false
-      }
-      return true
+        const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+        if (!validTypes.includes(file.type)) {
+            toast.error('Định dạng file không hợp lệ. Vui lòng chọn ảnh (JPEG, PNG, GIF, WEBP).')
+            return false
+        }
+        if (file.size > 5 * 1024 * 1024) { // 5MB
+            toast.error('Kích thước ảnh quá lớn. Vui lòng chọn ảnh dưới 5MB.')
+            return false
+        }
+        return true
     }
 
     const handleImageChange = (e) => {
-      const file = e.target.files[0]
-      if (file && validateFile(file)) {
-        setImageFile(file)
-        setPreview(URL.createObjectURL(file))
-      }
+        const file = e.target.files[0]
+        if (file && validateFile(file)) {
+            setImageFile(file)
+            setPreview(URL.createObjectURL(file))
+        }
     }
 
     const handleDragOver = (e) => {
-      e.preventDefault()
-      setIsDragging(true)
+        e.preventDefault()
+        setIsDragging(true)
     }
 
     const handleDrop = (e) => {
-      e.preventDefault()
-      setIsDragging(false)
-      const file = e.dataTransfer.files[0]
-      if (file && validateFile(file)) {
-        setImageFile(file)
-        setPreview(URL.createObjectURL(file))
-      }
+        e.preventDefault()
+        setIsDragging(false)
+        const file = e.dataTransfer.files[0]
+        if (file && validateFile(file)) {
+            setImageFile(file)
+            setPreview(URL.createObjectURL(file))
+        }
     }
 
     if (!product) {
-      return (
-        <div className='flex justify-center w-full py-8 px-4 lg:px-8'>
-          <div className='w-full max-w-[800px] text-center'>
-            <h2 className='text-2xl font-bold mb-4'>Sản phẩm không tồn tại</h2>
-            <button onClick={() => navigate(-1)} className='rounded-lg bg-blue-500 text-white px-4 py-2'>Quay lại</button>
-          </div>
-        </div>
-      )
+        return (
+            <div className='flex justify-center w-full py-8 px-4 lg:px-8'>
+                <div className='w-full max-w-[800px] text-center'>
+                    <h2 className='text-2xl font-bold mb-4'>Sản phẩm không tồn tại</h2>
+                    <button onClick={() => navigate(-1)} className='rounded-lg bg-blue-500 text-white px-4 py-2'>Quay lại</button>
+                </div>
+            </div>
+        )
     }
 
     // Helper functions for price calculation
@@ -214,11 +214,13 @@ const Product = () => {
     const formatPrice = (num) => new Intl.NumberFormat('vi-VN').format(num) + 'đ'
 
     const totalPrice = parsePrice(product.price)
-    const theoryFee = product.theoryFee ? parsePrice(product.theoryFee) : 5000000
-    const examFee = product.examFee ? parsePrice(product.examFee) : 1500000
-    // Calculate practice fee based on total price to ensure they sum up correctly
-    const practiceFee = Math.max(0, totalPrice - theoryFee - examFee)
+    // Lấy phí từ product, nếu không có thì để là 0
+    const theoryFee = product.theoryFee ? parsePrice(product.theoryFee) : 0
+    const examFee = product.examFee ? parsePrice(product.examFee) : 0
+    const healthFee = product.healthFee ? parsePrice(product.healthFee) : 0
 
+    // Tính phí thực hành dựa trên tổng trừ đi các phí đã biết
+    const practiceFee = Math.max(0, totalPrice - theoryFee - examFee - healthFee)
     const getDatDistance = (id) => {
         if (!id) return '810km'
         if (id.includes('b1')) return '710km'
@@ -293,26 +295,26 @@ const Product = () => {
 
                     {/* Tabs Navigation */}
                     <div className='flex overflow-x-auto border-b border-gray-200 gap-6 pb-1'>
-                        <button 
-                            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} 
+                        <button
+                            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                             className={`${activeTab === 'overview' ? 'text-[#135bec] border-b-2 border-[#135bec] font-bold' : 'text-gray-500 hover:text-gray-800 font-medium'} px-2 pb-3 whitespace-nowrap transition-colors`}
                         >
                             Tổng quan
                         </button>
-                        <button 
-                            onClick={() => scrollToSection('lo-trinh')} 
+                        <button
+                            onClick={() => scrollToSection('lo-trinh')}
                             className={`${activeTab === 'lo-trinh' ? 'text-[#135bec] border-b-2 border-[#135bec] font-bold' : 'text-gray-500 hover:text-gray-800 font-medium'} px-2 pb-3 whitespace-nowrap transition-colors`}
                         >
                             Lộ trình đào tạo
                         </button>
-                        <button 
-                            onClick={() => scrollToSection('hoc-phi')} 
+                        <button
+                            onClick={() => scrollToSection('hoc-phi')}
                             className={`${activeTab === 'hoc-phi' ? 'text-[#135bec] border-b-2 border-[#135bec] font-bold' : 'text-gray-500 hover:text-gray-800 font-medium'} px-2 pb-3 whitespace-nowrap transition-colors`}
                         >
                             Học phí chi tiết
                         </button>
-                        <button 
-                            onClick={() => scrollToSection('ho-so')} 
+                        <button
+                            onClick={() => scrollToSection('ho-so')}
                             className={`${activeTab === 'ho-so' ? 'text-[#135bec] border-b-2 border-[#135bec] font-bold' : 'text-gray-500 hover:text-gray-800 font-medium'} px-2 pb-3 whitespace-nowrap transition-colors`}
                         >
                             Hồ sơ đăng ký
@@ -321,24 +323,24 @@ const Product = () => {
 
                     {/* Quyền lợi */}
                     {product.highlights && product.highlights.length > 0 && (
-                      <div>
-                        <h3 className='text-xl font-bold mb-6 flex items-center gap-2'>
-                            <span className='w-1 h-6 bg-[#135bec] rounded-full'></span>
-                            Quyền lợi học viên {product.title}
-                        </h3>
-                        <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                            {product.highlights.map((item, index) => (
-                                <div key={index} className='bg-white p-5 rounded-lg border border-gray-100 shadow-sm flex gap-4 items-start'>
-                                    <div className='bg-blue-50 p-2 rounded-lg text-[#135bec] shrink-0'>
-                                        <span className='material-symbols-outlined'>check_circle</span>
+                        <div>
+                            <h3 className='text-xl font-bold mb-6 flex items-center gap-2'>
+                                <span className='w-1 h-6 bg-[#135bec] rounded-full'></span>
+                                Quyền lợi học viên {product.title}
+                            </h3>
+                            <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                                {product.highlights.map((item, index) => (
+                                    <div key={index} className='bg-white p-5 rounded-lg border border-gray-100 shadow-sm flex gap-4 items-start'>
+                                        <div className='bg-blue-50 p-2 rounded-lg text-[#135bec] shrink-0'>
+                                            <span className='material-symbols-outlined'>check_circle</span>
+                                        </div>
+                                        <div>
+                                            <h4 className='font-bold text-base mb-1'>{item}</h4>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <h4 className='font-bold text-base mb-1'>{item}</h4>
-                                    </div>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
                         </div>
-                      </div>
                     )}
 
                     {/* Lộ trình đào tạo */}
@@ -450,13 +452,17 @@ const Product = () => {
                                         <th className='px-6 py-4'>Theo quy định sở GTVT</th>
                                     </tr>
                                     <tr>
-                                        <th className='px-6 py-4 font-medium text-gray-900'>Khám sức khỏe</th>
-                                        <th className='px-6 py-4 text-right font-bold'>Miễn phí</th>
-                                        <th className='px-6 py-4 text-green-600 font-medium'>Ưu đãi tháng này</th>
+                                        <th className='px-6 py-4 font-medium text-gray-900'>Phí khám sức khỏe</th>
+                                        <th className='px-6 py-4 text-right font-bold'>
+                                            {product.healthFee ? formatPrice(healthFee) : 'Miễn phí'}
+                                        </th>
+                                        <th className={`px-6 py-4 font-medium ${!product.healthFee ? 'text-green-600' : ''}`}>
+                                            {product.healthFee ? 'Theo quy định' : 'Ưu đãi tháng này'}
+                                        </th>
                                     </tr>
                                     <tr className='bg-blue-50/50'>
                                         <th className='px-6 py-4 font-bold text-[#135bec] text-base'>TỔNG CỘNG TRỌN GÓI</th>
-                                        <th className='px-6 py-4 text-right font-black text-xl text-[#135bec]'>{product.price}</th>
+                                        <th className='px-6 py-4 text-right font-black text-xl text-[#135bec]'>{formatPrice(totalPrice)}</th>
                                         <th className='px-6 py-4 font-medium text-[#135bec]'>Cam kết không phát sinh</th>
                                     </tr>
                                 </tbody>
@@ -514,7 +520,7 @@ const Product = () => {
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <div className='mt-6 p-4 bg-yellow-50 rounded-lg border border-yellow-100 flex gap-3'>
                                 <span className='material-symbols-outlined text-yellow-600'>info</span>
                                 <p className='text-sm text-yellow-800'>
@@ -549,29 +555,29 @@ const Product = () => {
                                         <input value={newTitle} onChange={e => setNewTitle(e.target.value)} className='w-full mt-1 p-2 border rounded' />
                                         <label className='text-sm font-medium mt-2 block'>Mô tả</label>
                                         <textarea value={newDesc} onChange={e => setNewDesc(e.target.value)} className='w-full mt-1 p-2 border rounded' rows={3} />
-                                        
+
                                         <div className='grid grid-cols-2 gap-2 mt-2'>
-                                          <div>
-                                            <label className='text-sm font-medium block'>Giá hiện tại</label>
-                                            <input value={newPrice} onChange={e => setNewPrice(e.target.value)} className='w-full mt-1 p-2 border rounded' />
-                                          </div>
-                                          <div>
-                                            <label className='text-sm font-medium block'>Giá cũ (gạch ngang)</label>
-                                            <input value={newOldPrice} onChange={e => setNewOldPrice(e.target.value)} className='w-full mt-1 p-2 border rounded' />
-                                          </div>
+                                            <div>
+                                                <label className='text-sm font-medium block'>Giá hiện tại</label>
+                                                <input value={newPrice} onChange={e => setNewPrice(e.target.value)} className='w-full mt-1 p-2 border rounded' />
+                                            </div>
+                                            <div>
+                                                <label className='text-sm font-medium block'>Giá cũ (gạch ngang)</label>
+                                                <input value={newOldPrice} onChange={e => setNewOldPrice(e.target.value)} className='w-full mt-1 p-2 border rounded' />
+                                            </div>
                                         </div>
 
                                         <label className='text-sm font-medium mt-2 block'>Ảnh khóa học</label>
-                                        <div 
-                                          className={`border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors mt-1 ${isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400'}`}
-                                          onDragOver={handleDragOver}
-                                          onDragLeave={() => setIsDragging(false)}
-                                          onDrop={handleDrop}
-                                          onClick={() => document.getElementById('product-file-upload').click()}
+                                        <div
+                                            className={`border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors mt-1 ${isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400'}`}
+                                            onDragOver={handleDragOver}
+                                            onDragLeave={() => setIsDragging(false)}
+                                            onDrop={handleDrop}
+                                            onClick={() => document.getElementById('product-file-upload').click()}
                                         >
-                                          <input id="product-file-upload" type="file" onChange={handleImageChange} className='hidden' accept="image/*" />
-                                          <span className="material-symbols-outlined text-3xl text-gray-400">cloud_upload</span>
-                                          <p className="text-xs text-gray-500 font-medium">Kéo thả hoặc click để chọn ảnh</p>
+                                            <input id="product-file-upload" type="file" onChange={handleImageChange} className='hidden' accept="image/*" />
+                                            <span className="material-symbols-outlined text-3xl text-gray-400">cloud_upload</span>
+                                            <p className="text-xs text-gray-500 font-medium">Kéo thả hoặc click để chọn ảnh</p>
                                         </div>
                                         {uploading && <p className='text-xs text-blue-600 mt-1'>Đang xử lý...</p>}
                                         {preview && <img src={preview} alt="Preview" className='mt-2 h-20 object-cover rounded border' />}

@@ -83,8 +83,8 @@ const AppRoutes = () => {
         setMaintenanceMode(data.maintenanceMode)
         setLoadingSettings(false)
       })
-      .catch(() => setLoadingSettings(false))
-  }, [API_BASE])
+      .catch(() => setLoadingSettings(false));
+  }, [API_BASE, location.pathname]); // Fetch lại khi chuyển trang
 
   if (loadingSettings) {
     return (
@@ -104,59 +104,60 @@ const AppRoutes = () => {
   }
 
   return (
-        <div className='min-h-screen flex flex-col font-sans text-gray-900'>
-          <ToastContainer position="top-right" autoClose={3000} />
-          <LoadingOverlay />
-          <ScrollToTop />
-          
-          <Routes>
-            {/* Admin Routes (Protected) */}
-            <Route path='/admin' element={<AdminRoute><AdminLayout /></AdminRoute>}>
-              <Route index element={<AdminDashboard />} />
-              <Route path='contacts' element={<AdminContacts />} />
-              <Route path='courses' element={<AdminCourses />} />
-              <Route path='courses/:id' element={<AdminCourseDetail />} />
-              <Route path='banners' element={<AdminBanners />} />
-              <Route path='schedule' element={<AdminSchedule />} />
-              <Route path='gallery' element={<AdminGallery />} />
-              <Route path='videos' element={<AdminVideos />} />
-              <Route path='news' element={<AdminNews />} />
-              <Route path='news/:id' element={<AdminNewsDetail />} />
-              <Route path='audit-logs' element={<AdminAuditLog />} />
-              <Route path='forms' element={<AdminForms />} />
-              
-              <Route path='settings' element={<AdminRoute allowedRoles={['admin', 'superadmin']}><Settings /></AdminRoute>} />
-              <Route path='profile' element={<AdminProfile />} />
-              <Route path='student/:id' element={<StudentDetail />} />
-            </Route>
+    <div className='min-h-screen flex flex-col font-sans text-gray-900'>
+      <ToastContainer position="top-right" autoClose={3000} />
+      <LoadingOverlay />
+      <ScrollToTop />
 
-            {/* Public Routes */}
-            <Route element={<PublicLayout />}>
-              <Route path='/' element={<Home />} />
-              <Route path='/gioi_thieu' element={<Introduce />} />
-              <Route path='/khoa_hoc' element={<Course />} />
-              <Route path='/hoc_phi' element={<Tuition />} />
-              <Route path='/tin_tuc' element={<News />} />
-              <Route path='/tin_tuc/:id' element={<NewsDetail />} />
-              <Route path='/lien_he' element={<Contact />} />
-              <Route path='/dangkykhoahoc' element={<RegisterForTheCourse />} />
-              <Route path='/product/:productId' element={<Product />} />
-              <Route path='/hethongxetaplai' element={<DrivingPracticeCar />} />
-              <Route path='/tiledau' element={<PassRate />} />
-              <Route path='/chinhsachhocphi' element={<TuitionPolicy />} />
-              <Route path='/giohoc' element={<Timeframe />} />
-              <Route path='/thu-vien-anh' element={<Gallery />} />
-              <Route path='/thu-vien-video' element={<VideoLibrary />} />
-              <Route path='/tai-bieu-mau' element={<DownloadForms />} />
-              
-              {/* Catch-all Route for 404 */}
-              <Route path='*' element={<NotFound />} />
-            </Route>
+      <Routes>
+        {/* Admin Routes (Protected) */}
+        <Route path='/admin' element={<AdminRoute><AdminLayout /></AdminRoute>}>
+          <Route index element={<AdminDashboard />} />
+          <Route path='contacts' element={<AdminContacts />} />
+          <Route path='courses' element={<AdminCourses />} />
+          <Route path='courses/:id' element={<AdminCourseDetail />} />
+          <Route path='banners' element={<AdminBanners />} />
+          <Route path='schedule' element={<AdminSchedule />} />
+          <Route path='gallery' element={<AdminGallery />} />
+          <Route path='videos' element={<AdminVideos />} />
+          <Route path='news' element={<AdminNews />} />
+          <Route path='news/:id' element={<AdminNewsDetail />} />
+          <Route path='audit-logs' element={<AdminAuditLog />} />
+          <Route path='forms' element={<AdminForms />} />
 
-            {/* Standalone Routes */}
-            <Route path='/login' element={<Login />} />
-          </Routes>
-        </div>
+          <Route path='settings' element={<AdminRoute allowedRoles={['admin', 'superadmin']}><Settings /></AdminRoute>} />
+          <Route path='profile' element={<AdminProfile />} />
+          <Route path='student/:id' element={<StudentDetail />} />
+        </Route>
+
+        {/* Public Routes */}
+        <Route element={<PublicLayout />}>
+          <Route path='/' element={<Home />} />
+          <Route path='/gioi_thieu' element={<Introduce />} />
+          <Route path='/khoa_hoc' element={<Course />} />
+          <Route path='/hoc_phi' element={<Tuition />} />
+          <Route path='/tin_tuc' element={<News />} />
+          <Route path='/tin_tuc/:id' element={<NewsDetail />} />
+          <Route path='/lien_he' element={<Contact />} />
+          <Route path='/dangkykhoahoc' element={<RegisterForTheCourse />} />
+          <Route path='/product/:productId' element={<Product />} />
+          <Route path='/hethongxetaplai' element={<DrivingPracticeCar />} />
+          <Route path='/tiledau' element={<PassRate />} />
+          <Route path='/chinhsachhocphi' element={<TuitionPolicy />} />
+          <Route path='/giohoc' element={<Timeframe />} />
+          <Route path='/thu-vien-anh' element={<Gallery />} />
+          <Route path='/gallery' element={<Gallery />} />
+          <Route path='/thu-vien-video' element={<VideoLibrary />} />
+          <Route path='/tai-bieu-mau' element={<DownloadForms />} />
+
+          {/* Catch-all Route for 404 */}
+          <Route path='*' element={<NotFound />} />
+        </Route>
+
+        {/* Standalone Routes */}
+        <Route path='/login' element={<Login />} />
+      </Routes>
+    </div>
   )
 }
 

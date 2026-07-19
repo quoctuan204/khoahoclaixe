@@ -4,6 +4,21 @@ import { products } from '../data/products'
 import { toast } from 'react-toastify'
 import { useAuth } from '../context/AuthContext'
 
+// --- THÊM MỚI: Hàm tiện ích để tạo slug (ID) tự động từ tiêu đề ---
+const slugify = (str) => {
+  if (!str) return '';
+  str = str.toString().toLowerCase().trim()
+    .normalize('NFD') // Tách dấu và chữ
+    .replace(/[\u0300-\u036f]/g, '') // Xóa dấu
+    .replace(/đ/g, 'd').replace(/Đ/g, 'D'); // Chuyển đổi chữ 'đ'
+
+  str = str.replace(/[^a-z0-9 -]/g, '') // Xóa các ký tự không hợp lệ
+    .replace(/\s+/g, '-') // Thay thế khoảng trắng bằng dấu gạch ngang
+    .replace(/-+/g, '-'); // Xóa các dấu gạch ngang thừa
+
+  return str;
+};
+
 const AdminCourseDetail = () => {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -11,7 +26,7 @@ const AdminCourseDetail = () => {
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
   const isNew = id === 'new'
-  
+
   const [formData, setFormData] = useState({
     id: '', // Thêm trường ID cho khóa học mới
     title: '',
@@ -24,6 +39,7 @@ const AdminCourseDetail = () => {
     highlights: '', // Sẽ xử lý dưới dạng chuỗi text (mỗi dòng 1 ý)
     theoryFee: '',
     examFee: '',
+    healthFee: '',
     isVisible: true
   })
   const [imageFile, setImageFile] = useState(null)
@@ -45,7 +61,7 @@ const AdminCourseDetail = () => {
         if (r.ok) {
           pDb = await r.json()
         }
-        
+
         const pLocal = products.find(x => x.id === id)
 
         if (!pDb && !pLocal) {
@@ -55,28 +71,29 @@ const AdminCourseDetail = () => {
         }
 
         const merged = { ...pLocal, ...pDb }
-          
-          if (merged.image && typeof merged.image === 'string' && merged.image.startsWith('/uploads/')) {
-            merged.image = `${API_BASE}${merged.image}`
-          }
 
-          // Chuyển mảng highlights thành chuỗi để hiển thị trong textarea
-          const highlightsStr = Array.isArray(merged.highlights) ? merged.highlights.join('\n') : ''
+        if (merged.image && typeof merged.image === 'string' && merged.image.startsWith('/uploads/')) {
+          merged.image = `${API_BASE}${merged.image}`
+        }
 
-          setFormData({
-            id: merged.id,
-            title: merged.title || '',
-            description: merged.description || '',
-            price: merged.price || '',
-            oldPrice: merged.oldPrice || '',
-            duration: merged.duration || '',
-            vehicle: merged.vehicle || '',
-            image: merged.image || '',
-            highlights: highlightsStr,
-            theoryFee: merged.theoryFee || '',
-            examFee: merged.examFee || '',
-            isVisible: merged.isVisible !== false
-          })
+        // Chuyển mảng highlights thành chuỗi để hiển thị trong textarea
+        const highlightsStr = Array.isArray(merged.highlights) ? merged.highlights.join('\n') : ''
+
+        setFormData({
+          id: merged.id,
+          title: merged.title || '',
+          description: merged.description || '',
+          price: merged.price || '',
+          oldPrice: merged.oldPrice || '',
+          duration: merged.duration || '',
+          vehicle: merged.vehicle || '',
+          image: merged.image || '',
+          highlights: highlightsStr,
+          theoryFee: merged.theoryFee || '',
+          examFee: merged.examFee || '',
+          healthFee: merged.healthFee || '',
+          isVisible: merged.isVisible !== false
+        })
       } catch (error) {
         console.error(error)
         toast.error('Lỗi tải dữ liệu')
@@ -92,6 +109,14 @@ const AdminCourseDetail = () => {
       if (preview) URL.revokeObjectURL(preview)
     }
   }, [preview])
+
+  // --- THÊM MỚI: Tự động tạo ID từ tiêu đề khi thêm khóa học mới ---
+  useEffect(() => {
+    if (isNew) {
+      const generatedId = slugify(formData.title);
+      setFormData(prev => ({ ...prev, id: generatedId }));
+    }
+  }, [formData.title, isNew]);
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -137,7 +162,7 @@ const AdminCourseDetail = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setUploading(true)
-    
+
     // Chuyển đổi highlights từ chuỗi về mảng
     const highlightsArray = formData.highlights.split('\n').filter(line => line.trim() !== '')
 
@@ -150,10 +175,10 @@ const AdminCourseDetail = () => {
       if (imageFile) {
         const data = new FormData()
         data.append('image', imageFile)
-        const uploadRes = await fetch(`${API_BASE}/api/upload`, { 
-          method: 'POST', 
+        const uploadRes = await fetch(`${API_BASE}/api/upload`, {
+          method: 'POST',
           headers: { 'Authorization': `Bearer ${token}` },
-          body: data 
+          body: data
         })
         const uploadJson = await uploadRes.json().catch(() => ({}));
         if (!uploadRes.ok) {
@@ -230,16 +255,20 @@ const AdminCourseDetail = () => {
             <input className='w-full border border-gray-300 rounded-lg p-2' name="vehicle" value={formData.vehicle} onChange={handleChange} />
           </div>
           <div>
-            <label className='block text-sm font-medium text-gray-700 mb-1'>Phí Lý thuyết & Hồ sơ</label>
+            <label className='block text-sm font-medium text-gray-700 mb-1'>Phí hồ sơ & Đào tạo lý thuyết</label>
             <input className='w-full border border-gray-300 rounded-lg p-2' name="theoryFee" value={formData.theoryFee} onChange={handleChange} placeholder="VD: 5.000.000đ" />
           </div>
           <div>
-            <label className='block text-sm font-medium text-gray-700 mb-1'>Lệ phí thi</label>
+            <label className='block text-sm font-medium text-gray-700 mb-1'>Lệ phí thi tốt nghiệp & Sát hạch</label>
             <input className='w-full border border-gray-300 rounded-lg p-2' name="examFee" value={formData.examFee} onChange={handleChange} placeholder="VD: 1.500.000đ" />
           </div>
           <div>
+            <label className='block text-sm font-medium text-gray-700 mb-1'>Phí khám sức khỏe</label>
+            <input className='w-full border border-gray-300 rounded-lg p-2' name="healthFee" value={formData.healthFee} onChange={handleChange} placeholder="VD: 300.000đ" />
+          </div>
+          <div>
             <label className='block text-sm font-medium text-gray-700 mb-1'>Hình ảnh</label>
-            <div 
+            <div
               className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400'}`}
               onDragOver={handleDragOver}
               onDragLeave={() => setIsDragging(false)}
@@ -254,10 +283,10 @@ const AdminCourseDetail = () => {
             {uploading && <p className='text-xs text-blue-500 mt-1'>Đang xử lý...</p>}
             {(preview || formData.image) && <img src={preview || formData.image} alt="Preview" className='mt-2 h-32 object-cover rounded border' />}
           </div>
-          
+
           <div className='flex items-center gap-2 mt-2'>
-            <input 
-              type="checkbox" 
+            <input
+              type="checkbox"
               id="isVisible"
               checked={formData.isVisible}
               onChange={(e) => setFormData(prev => ({ ...prev, isVisible: e.target.checked }))}
