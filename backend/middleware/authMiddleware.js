@@ -10,7 +10,7 @@ const protect = async (req, res, next) => {
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     try {
       token = req.headers.authorization.split(' ')[1];
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
       // Lấy thông tin admin từ DB để đảm bảo role luôn mới nhất
       const admin = await Admin.findById(decoded.id).select('-password');

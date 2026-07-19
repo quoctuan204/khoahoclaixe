@@ -12,8 +12,10 @@ const adminSchema = new mongoose.Schema({
   lockoutCount: { type: Number, default: 0 }, // Đếm cấp độ khóa (0: chưa, 1: 15p, 2+: 24h)
   twoFactorCode: String,
   twoFactorExpires: Date,
+  twoFactorAttempts: { type: Number, default: 0 },
   resetPasswordCode: String,
   resetPasswordExpires: Date,
+  resetPasswordAttempts: { type: Number, default: 0 },
   resetRequestCount: { type: Number, default: 0 },
   resetRequestWindowStart: Date
 });

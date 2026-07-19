@@ -1,7 +1,6 @@
 const crypto = require('crypto');
 
-// Sử dụng key cố định cho demo (Trong thực tế nên để trong .env)
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'khoahoclaixe_secret_key_2024_!!!'; // Phải đủ 32 ký tự
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY; // Phải đủ 32 ký tự
 const IV_LENGTH = 16; // For AES, this is always 16
 
 // Đảm bảo key đủ 32 bytes

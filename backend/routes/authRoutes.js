@@ -31,6 +31,9 @@ const logActivity = async (req, action, target, targetId, details) => {
 
 router.post('/login', loginLimiter, async (req, res) => {
   const { username, password } = req.body;
+  if (typeof username !== 'string' || typeof password !== 'string') {
+    return res.status(400).json({ message: 'Thông tin đăng nhập không hợp lệ' });
+  }
   try {
     let admin = await Admin.findOne({ username });
     
@@ -48,16 +51,19 @@ router.post('/login', loginLimiter, async (req, res) => {
         admin.loginAttempts = 0;
         admin.lockUntil = undefined;
         admin.lockoutCount = 0;
+        admin.twoFactorAttempts = 0;
+        admin.resetPasswordAttempts = 0;
         
         await admin.save();
 
-        const token = jwt.sign({ id: admin._id, role: admin.role }, process.env.JWT_SECRET || 'secret', { expiresIn: '1d' });
+        const token = jwt.sign({ id: admin._id, role: admin.role }, process.env.JWT_SECRET, { expiresIn: '1d' });
         const user = await Admin.findById(admin._id).select('-password');
         return res.json({ token, user });
       } else {
         admin.loginAttempts = (admin.loginAttempts || 0) + 1;
         if (admin.loginAttempts >= 5) {
           admin.lockUntil = Date.now() + 15 * 60 * 1000;
+          await admin.save();
           return res.status(403).json({ message: 'Tài khoản bị khóa 15 phút.' });
         }
         await admin.save();
@@ -67,21 +73,39 @@ router.post('/login', loginLimiter, async (req, res) => {
     return res.status(401).json({ message: 'Sai thông tin đăng nhập' });
   } catch (error) {
     console.error('Login Error:', error.message);
-    res.status(500).json({ message: 'Lỗi server', error: error.message });
+    res.status(500).json({ message: 'Lỗi server' });
   }
 });
 
 router.post('/verify-2fa', loginLimiter, async (req, res) => {
   const { username, code } = req.body;
+  if (typeof username !== 'string' || typeof code !== 'string') {
+    return res.status(400).json({ message: 'Thông tin xác thực không hợp lệ' });
+  }
   try {
     const admin = await Admin.findOne({ username });
-    if (!admin || admin.twoFactorCode !== code || admin.twoFactorExpires < Date.now()) {
+    if (!admin || !admin.twoFactorCode || admin.twoFactorExpires < Date.now()) {
+      return res.status(400).json({ message: 'Mã xác nhận không hợp lệ hoặc đã hết hạn' });
+    }
+
+    if (admin.twoFactorCode !== code) {
+      admin.twoFactorAttempts = (admin.twoFactorAttempts || 0) + 1;
+      if (admin.twoFactorAttempts >= 3) {
+        admin.twoFactorCode = undefined;
+        admin.twoFactorExpires = undefined;
+        admin.twoFactorAttempts = 0;
+        await admin.save();
+        return res.status(400).json({ message: 'Mã xác nhận 2FA đã bị hủy do nhập sai quá 3 lần. Vui lòng lấy mã mới.' });
+      }
+      await admin.save();
       return res.status(400).json({ message: 'Mã không hợp lệ' });
     }
+
     admin.twoFactorCode = undefined;
+    admin.twoFactorAttempts = 0;
     await admin.save();
 
-    const token = jwt.sign({ id: admin._id, role: admin.role }, process.env.JWT_SECRET || 'secret', { expiresIn: '1d' });
+    const token = jwt.sign({ id: admin._id, role: admin.role }, process.env.JWT_SECRET, { expiresIn: '1d' });
     const user = await Admin.findById(admin._id).select('-password');
     res.json({ token, user });
 
@@ -101,7 +125,7 @@ router.get('/me', async (req, res) => {
     }
     
     console.log('[DEBUG] Đang verify token...');
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     console.log('[DEBUG] Token OK. ID:', decoded.id, '- Đang tìm trong DB...');
     
     const admin = await Admin.findById(decoded.id).select('-password');
@@ -124,6 +148,9 @@ router.get('/admins', protect, checkSuperAdmin, async (req, res) => {
 
 router.post('/admins', protect, checkSuperAdmin, async (req, res) => {
   const { username, password, role, fullName, email } = req.body;
+  if (role === 'superadmin' && req.role !== 'superadmin') {
+    return res.status(403).json({ message: 'Không có quyền tạo tài khoản Super Admin' });
+  }
   const exists = await Admin.findOne({ username });
   if (exists) return res.status(400).json({ message: 'Username tồn tại' });
 
@@ -138,6 +165,13 @@ router.post('/admins', protect, checkSuperAdmin, async (req, res) => {
 
 router.put('/admins/:id', protect, checkSuperAdmin, async (req, res) => {
   const { username, password, role, fullName, email } = req.body;
+  const targetAdmin = await Admin.findById(req.params.id);
+  if (targetAdmin && targetAdmin.role === 'superadmin' && req.role !== 'superadmin') {
+    return res.status(403).json({ message: 'Không thể sửa tài khoản Super Admin' });
+  }
+  if (role === 'superadmin' && req.role !== 'superadmin') {
+    return res.status(403).json({ message: 'Không có quyền gán quyền Super Admin' });
+  }
   const updateData = { username, role, fullName, email };
   if (password) {
     const salt = await bcrypt.genSalt(10);
@@ -192,11 +226,14 @@ router.put('/admin/profile', protect, async (req, res) => {
 /* FORGOT PASSWORD */
 router.post('/forgot-password', loginLimiter, async (req, res) => {
   let { email } = req.body;
-  if (email) email = email.trim(); // Xóa khoảng trắng thừa
-  console.log('[DEBUG] Yêu cầu quên mật khẩu cho email:', email);
+  if (typeof email !== 'string') {
+    return res.status(400).json({ message: 'Email không hợp lệ' });
+  }
+  email = email.trim();
   try {
-    // Tìm kiếm chính xác nhưng không phân biệt hoa thường (Case-insensitive)
-    const admin = await Admin.findOne({ email: { $regex: new RegExp(`^${email}$`, 'i') } });
+    // Escape regex characters để chống Regex Injection
+    const escapedEmail = email.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    const admin = await Admin.findOne({ email: { $regex: new RegExp(`^${escapedEmail}$`, 'i') } });
     if (!admin) return res.status(400).json({ message: 'Email không tồn tại trong hệ thống' });
 
     // --- RATE LIMIT: Max 3 lần / 1 giờ ---
@@ -216,7 +253,8 @@ router.post('/forgot-password', loginLimiter, async (req, res) => {
 
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     admin.resetPasswordCode = code;
-    admin.resetPasswordExpires = Date.now() + 1 * 60 * 1000; // Hết hạn sau 1 phút
+    admin.resetPasswordExpires = Date.now() + 5 * 60 * 1000; // Hết hạn sau 5 phút
+    admin.resetPasswordAttempts = 0;
     await admin.save();
 
     await sendEmail(admin.email, 'Mã đặt lại mật khẩu', `Mã xác nhận của bạn là: ${code}`);
@@ -229,23 +267,38 @@ router.post('/forgot-password', loginLimiter, async (req, res) => {
 
 router.post('/reset-password-public', loginLimiter, async (req, res) => {
   const { email, code, newPassword } = req.body;
+  if (typeof email !== 'string' || typeof code !== 'string' || typeof newPassword !== 'string') {
+    return res.status(400).json({ message: 'Thông tin không hợp lệ' });
+  }
   try {
-    const admin = await Admin.findOne({ 
-      email, 
-      resetPasswordCode: code, 
-      resetPasswordExpires: { $gt: Date.now() } 
-    });
+    const admin = await Admin.findOne({ email });
+    if (!admin || !admin.resetPasswordCode || admin.resetPasswordExpires < Date.now()) {
+      return res.status(400).json({ message: 'Yêu cầu đặt lại mật khẩu không hợp lệ hoặc đã hết hạn' });
+    }
 
-    if (!admin) return res.status(400).json({ message: 'Mã xác nhận không đúng hoặc đã hết hạn' });
+    if (admin.resetPasswordCode !== code) {
+      admin.resetPasswordAttempts = (admin.resetPasswordAttempts || 0) + 1;
+      if (admin.resetPasswordAttempts >= 3) {
+        admin.resetPasswordCode = undefined;
+        admin.resetPasswordExpires = undefined;
+        admin.resetPasswordAttempts = 0;
+        await admin.save();
+        return res.status(400).json({ message: 'Mã xác nhận đã bị vô hiệu hóa do thử sai quá 3 lần. Vui lòng lấy mã mới.' });
+      }
+      await admin.save();
+      return res.status(400).json({ message: 'Mã xác nhận không đúng' });
+    }
 
     const salt = await bcrypt.genSalt(10);
     admin.password = await bcrypt.hash(newPassword, salt);
     admin.resetPasswordCode = undefined;
     admin.resetPasswordExpires = undefined;
+    admin.resetPasswordAttempts = 0;
     await admin.save();
 
     res.json({ message: 'Đổi mật khẩu thành công. Vui lòng đăng nhập lại.' });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: 'Lỗi server' });
   }
 });

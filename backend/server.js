@@ -10,6 +10,17 @@ const cron = require('node-cron');
 
 dotenv.config();
 
+// Ensure critical environment variables are set before starting the server
+if (!process.env.JWT_SECRET) {
+  console.error("FATAL ERROR: JWT_SECRET is not defined in the environment.");
+  process.exit(1);
+}
+if (!process.env.ENCRYPTION_KEY || process.env.ENCRYPTION_KEY.length < 32) {
+  console.error("FATAL ERROR: ENCRYPTION_KEY is not defined or is too short (must be at least 32 characters).");
+  process.exit(1);
+}
+
+
 const app = express();
 
 // --- IMPORTS TỪ CẤU TRÚC MỚI ---
@@ -19,9 +30,11 @@ const contentRoutes = require('./routes/contentRoutes');
 const customerRoutes = require('./routes/customerRoutes');
 const systemRoutes = require('./routes/systemRoutes');
 const chatRoutes = require('./routes/chatRoutes');
+const uploadRoutes = require('./routes/uploadRoutes');
 
 // 1. SECURITY: Helmet (Bảo mật Headers)
 app.use(helmet({
+  contentSecurityPolicy: false,
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 
@@ -56,51 +69,6 @@ if (!fs.existsSync(uploadDir)) {
 // Serve static files from uploads directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-const uploadCloud = require('./config/cloudinary');
-
-// --- TEST UPLOAD MULTER MEMORY ---
-const multer = require('multer'); 
-const multerMemory = multer({ storage: multer.memoryStorage() });
-app.post('/api/test-upload', multerMemory.single('image'), (req, res) => {
-  console.log('==== [TEST UPLOAD] req.file:', req.file);
-  if (!req.file) return res.status(400).json({ message: 'Không nhận được file (test)' });
-  res.json({ message: 'Nhận file thành công (test)', originalname: req.file.originalname, size: req.file.size });
-});
-
-// Upload Route
-// SECURITY: Added 'protect' middleware to prevent unauthorized uploads
-app.post('/api/upload', protect, (req, res) => {
-  uploadCloud.single('image')(req, res, (err) => {
-    if (err) console.log("UPLOAD ERROR:", err.message);
-    console.log('==== [UPLOAD DEBUG] req.file:', req.file);
-    console.log('==== [UPLOAD DEBUG] req.body:', req.body);
-    if (err) return res.status(400).json({ message: err.message || 'Lỗi upload file' });
-    if (!req.file) return res.status(400).json({ message: 'Chưa chọn file' });
-    // Trả về trực tiếp URL từ Cloudinary
-    res.json({ imageUrl: req.file.path });
-  });
-});
-
-// --- UPLOAD VIDEO ---
-app.post('/api/upload-video', protect, (req, res) => {
-  uploadCloud.single('file')(req, res, (err) => {
-    if (err) return res.status(400).json({ message: err.message || 'Lỗi upload file video' });
-    if (!req.file) return res.status(400).json({ message: 'Chưa chọn file' });
-    
-    res.json({ videoUrl: req.file.path, fileName: req.file.originalname });
-  });
-});
-
-// --- UPLOAD TÀI LIỆU (PDF, DOCX) ---
-app.post('/api/upload-doc', protect, (req, res) => {
-  uploadCloud.single('file')(req, res, (err) => {
-    if (err) return res.status(400).json({ message: err.message || 'Lỗi upload file' });
-    if (!req.file) return res.status(400).json({ message: 'Chưa chọn file' });
-    
-    res.json({ fileUrl: req.file.path, fileName: req.file.originalname });
-  });
-});
-
 // --- API QUẢN LÝ BIỂU MẪU ---
 const FormDocSchema = new mongoose.Schema({ form1Url: String, form1Name: String, form2Url: String, form2Name: String });
 const FormDoc = mongoose.models.FormDoc || mongoose.model('FormDoc', FormDocSchema);
@@ -133,43 +101,58 @@ if (!fs.existsSync(backupDir)) {
   fs.mkdirSync(backupDir);
 }
 
+// --- CẢI TIẾN LOGIC SAO LƯU ---
 const performBackup = async () => {
   const timestamp = new Date().toISOString().replace(/:/g, '-').split('.')[0]; // Format: YYYY-MM-DDTHH-mm-ss
   const currentBackupDir = path.join(backupDir, timestamp);
-  
-  if (!fs.existsSync(currentBackupDir)) {
-    fs.mkdirSync(currentBackupDir);
-  }
+  const RETENTION_DAYS = 7; // Giữ lại backup trong 7 ngày
 
-  console.log(`[Backup] Starting backup at ${timestamp}...`);
+  console.log(`[Backup] Starting daily backup...`);
 
   try {
-    const models = {
-      Registration,
-      Contact,
-      Admin,
-      Product,
-      Settings,
-      News,
-      Gallery,
-      Video,
-      Notification,
-      AuditLog,
-      Banner
-    };
+    // 1. Thực hiện sao lưu
+    fs.mkdirSync(currentBackupDir, { recursive: true });
 
-    for (const [name, model] of Object.entries(models)) {
-      const data = await model.find({});
-      fs.writeFileSync(
-        path.join(currentBackupDir, `${name}.json`),
-        JSON.stringify(data, null, 2)
-      );
+    // Lấy danh sách model tự động từ Mongoose, không cần hardcode
+    const models = mongoose.connection.models;
+
+    for (const modelName in models) {
+      try {
+        const model = models[modelName];
+        const data = await model.find({}).lean(); // .lean() để nhanh hơn
+        const filePath = path.join(currentBackupDir, `${modelName}.json`);
+        fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+      } catch (modelError) {
+        console.error(`[Backup] Failed to back up model ${modelName}:`, modelError);
+        // Ghi nhận lỗi nhưng vẫn tiếp tục với các model khác
+      }
     }
-    console.log(`[Backup] Completed successfully: ${currentBackupDir}`);
+    console.log(`[Backup] Completed successfully to: ${currentBackupDir}`);
+
+    // 2. Dọn dẹp các bản sao lưu cũ
+    const allBackups = fs.readdirSync(backupDir).sort().reverse(); // Sắp xếp từ mới đến cũ
+    if (allBackups.length > RETENTION_DAYS) {
+      const backupsToDelete = allBackups.slice(RETENTION_DAYS);
+      console.log(`[Backup] Cleaning up ${backupsToDelete.length} old backup(s)...`);
+      for (const oldBackup of backupsToDelete) {
+        try {
+          const oldBackupPath = path.join(backupDir, oldBackup);
+          fs.rmSync(oldBackupPath, { recursive: true, force: true });
+          console.log(`  - Deleted: ${oldBackup}`);
+        } catch (cleanupError) {
+          console.error(`[Backup] Failed to delete old backup ${oldBackup}:`, cleanupError);
+        }
+      }
+    }
   } catch (error) {
     console.error('[Backup] Failed:', error);
+    // Nếu việc tạo thư mục backup chính bị lỗi, xóa nó đi để tránh thư mục rỗng
+    if (fs.existsSync(currentBackupDir) && fs.readdirSync(currentBackupDir).length === 0) {
+      fs.rmdirSync(currentBackupDir);
+    }
   }
 };
+
 
 // Schedule backup daily at 02:00 AM
 cron.schedule('0 2 * * *', performBackup);
@@ -182,12 +165,24 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
+// 4. SECURITY: Rate Limiting riêng cho Chatbot (chặt chẽ hơn)
+const chatLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 phút
+  max: 30, // Tối đa 30 tin nhắn mỗi phút cho một IP
+  message: { reply: 'Bạn đang gửi tin nhắn quá nhanh. Vui lòng chờ một lát rồi thử lại.' },
+  standardHeaders: true, // Gửi header RateLimit-*
+  legacyHeaders: false, // Tắt header X-RateLimit-*
+});
+
 // --- MOUNT ROUTES ---
 app.use('/api', authRoutes); // Mount Auth Routes
 app.use('/api', contentRoutes); // Mount Content Routes (Products, News, etc.)
 app.use('/api', customerRoutes); // Mount Customer Routes (Registration, Contact)
 app.use('/api', systemRoutes); // Mount System Routes (Settings, Logs)
-app.use('/api/chat', chatRoutes); // Mount Chatbot Routes
+app.use('/api', uploadRoutes); // Mount Upload Routes
+
+// Áp dụng rate limit riêng cho chatbot
+app.use('/api/chat', chatLimiter, chatRoutes);
 
 // --- GLOBAL ERROR HANDLER ---
 app.use((err, req, res, next) => {

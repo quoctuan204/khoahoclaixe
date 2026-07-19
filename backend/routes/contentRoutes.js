@@ -15,18 +15,18 @@ const Banner = require('../models/Banner');
 const deleteFromCloudinary = async (fileUrl) => {
   try {
     if (!fileUrl || !fileUrl.includes('cloudinary.com')) return;
-    
+
     // Phân tích URL để lấy public_id
     const urlParts = fileUrl.split('/');
     const uploadIndex = urlParts.findIndex(p => p === 'upload');
     if (uploadIndex === -1) return;
-    
+
     const pathParts = urlParts.slice(uploadIndex + 2); // Bỏ qua phần 'upload' và 'v12345678'
     const fileWithExt = pathParts.join('/');
-    
+
     const extIndex = fileWithExt.lastIndexOf('.');
     const publicId = extIndex !== -1 ? fileWithExt.substring(0, extIndex) : fileWithExt;
-    
+
     // Xác định loại file để xóa đúng (video, raw, image)
     let resourceType = 'image';
     if (fileUrl.match(/\.(mp4|webm|mov|ogg)$/i)) resourceType = 'video';
@@ -70,7 +70,7 @@ router.put('/products/:id', protect, checkPermission(PERMISSIONS.MANAGE_CONTENT)
       req.body,
       { new: true, upsert: true }
     );
-    try { await logActivity(req, 'UPDATE', 'Product', updatedProduct._id, `Updated product ${req.body.title}`); } catch(e){}
+    try { await logActivity(req, 'UPDATE', 'Product', updatedProduct._id, `Updated product ${req.body.title}`); } catch (e) { }
     res.json(updatedProduct);
   } catch (error) {
     console.error('Lỗi khi cập nhật khóa học:', error);
@@ -85,10 +85,10 @@ router.post('/products', protect, checkPermission(PERMISSIONS.MANAGE_CONTENT), a
     if (existing) {
       return res.status(400).json({ message: 'Mã khóa học (ID) đã tồn tại! Vui lòng chọn mã khác.' });
     }
-    
+
     const newProduct = new Product(req.body);
     await newProduct.save();
-    try { await logActivity(req, 'CREATE', 'Product', newProduct._id, `Created product ${newProduct.title}`); } catch(e){}
+    try { await logActivity(req, 'CREATE', 'Product', newProduct._id, `Created product ${newProduct.title}`); } catch (e) { }
     res.status(201).json(newProduct);
   } catch (error) {
     console.error('Lỗi khi tạo khóa học:', error);
@@ -103,7 +103,7 @@ router.delete('/products/:id', protect, checkPermission(PERMISSIONS.MANAGE_CONTE
       await deleteFromCloudinary(product.image); // Xoá ảnh trên Cloudinary
     }
     const reason = req.body.reason || 'Không có lý do';
-    try { await logActivity(req, 'DELETE', product ? product.title : 'Product', product ? product._id : null, `Lý do: ${reason}`); } catch(e){}
+    try { await logActivity(req, 'DELETE', product ? product.title : 'Product', product ? product._id : null, `Lý do: ${reason}`); } catch (e) { }
     res.json({ message: 'Product deleted' });
   } catch (error) {
     console.error('Lỗi khi xóa khóa học:', error);
@@ -293,6 +293,27 @@ router.delete('/banners/:id', protect, checkPermission(PERMISSIONS.MANAGE_CONTEN
     res.json({ message: 'Banner deleted' });
   } catch (error) {
     res.status(500).json({ message: 'Error deleting banner' });
+  }
+});
+
+// --- THÊM MỚI: API SẮP XẾP BANNER ---
+router.put('/banners/reorder', protect, checkPermission(PERMISSIONS.MANAGE_CONTENT), async (req, res) => {
+  const { orderedIds } = req.body;
+
+  if (!Array.isArray(orderedIds)) {
+    return res.status(400).json({ message: 'Dữ liệu không hợp lệ.' });
+  }
+
+  try {
+    const updatePromises = orderedIds.map((id, index) =>
+      Banner.updateOne({ _id: id }, { $set: { order: index } })
+    );
+
+    await Promise.all(updatePromises);
+    await logActivity(req, 'UPDATE', 'Banner', 'Multiple', `Reordered ${orderedIds.length} banners`);
+    res.json({ message: 'Cập nhật thứ tự banner thành công.' });
+  } catch (error) {
+    res.status(500).json({ message: 'Lỗi khi cập nhật thứ tự.' });
   }
 });
 

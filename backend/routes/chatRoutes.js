@@ -21,7 +21,7 @@ const extractNameFromText = (text, phoneToExclude = '') => {
   // Cách 1: Tìm theo từ khóa (tên là, mình là...)
   const nameRegex = /(?:tên(?: là)?|mình(?: tên| là)|anh(?: tên| là)?|chị(?: tên| là)?|em(?: tên| là)?|gọi(?: là| mình là)?)\s+([\p{L}\s]+?)(?:\s*(?:số|sđt|sdt|liên hệ|0\d|[\.,\-]|$))/iu;
   const match = text.match(nameRegex);
-  
+
   let possibleName = null;
 
   if (match && match[1]) {
@@ -31,37 +31,37 @@ const extractNameFromText = (text, phoneToExclude = '') => {
     let textWithoutPhone = text.replace(phoneToExclude, '').trim();
     textWithoutPhone = textWithoutPhone.replace(/^[\.,\-:]+|[\.,\-:]+$/g, '').trim(); // Xóa dấu câu thừa
     textWithoutPhone = textWithoutPhone.replace(/^(?:số|sđt|sdt|call)\s*/i, '').trim(); // Xóa chữ "số", "sđt" bơ vơ
-    
+
     // Nếu chuỗi còn lại chỉ toàn là chữ cái, dài từ 1-4 từ -> Khả năng cao là Tên
     if (/^[\p{L}\s]+$/u.test(textWithoutPhone)) {
-       const wordCount = textWithoutPhone.split(/\s+/).length;
-       if (wordCount >= 1 && wordCount <= 4) {
-           possibleName = textWithoutPhone;
-       }
+      const wordCount = textWithoutPhone.split(/\s+/).length;
+      if (wordCount >= 1 && wordCount <= 4) {
+        possibleName = textWithoutPhone;
+      }
     }
   }
 
   if (possibleName) {
     possibleName = possibleName.replace(/\s+(nhé|nha|ạ|đây|đó)$/i, '').trim(); // Loại bỏ từ đệm cuối câu
     if (possibleName.length >= 2 && possibleName.length <= 40) {
-       const norm = normalizeText(possibleName);
-       // Bỏ qua nếu từ đó trông giống câu hỏi khóa học hơn là Tên người
-       const isCourseKeyword = ['b1', 'b2', 'hang c', 'xe tai', 'hoc phi', 'gia', 'bao nhieu'].some(kw => norm.includes(kw));
-       if (!isCourseKeyword) return capitalizeName(possibleName);
+      const norm = normalizeText(possibleName);
+      // Bỏ qua nếu từ đó trông giống câu hỏi khóa học hơn là Tên người
+      const isCourseKeyword = ['b1', 'b2', 'hang c', 'xe tai', 'hoc phi', 'gia', 'bao nhieu'].some(kw => norm.includes(kw));
+      if (!isCourseKeyword) return capitalizeName(possibleName);
     }
   }
   return null;
 };
 
 // Biến lưu trữ tạm thời trên RAM để chống Spam
-const recentPhones = new Set(); 
+const recentPhones = new Set();
 const ipPhoneSubmissions = new Map();
 const pendingNames = new Map(); // Lưu trạng thái chờ khách nhập tên
 
 router.post('/', async (req, res) => {
   try {
     const { history } = req.body;
-    
+
     if (!history || !Array.isArray(history) || history.length === 0) {
       return res.status(400).json({ message: 'Lịch sử trò chuyện không hợp lệ' });
     }
@@ -82,11 +82,19 @@ router.post('/', async (req, res) => {
       // Chờ tối đa 15 phút để khách nhập tên
       if (Date.now() - pendingData.timestamp < 15 * 60 * 1000) {
         const nameStr = latestMessage.trim();
-        const normName = normalizeText(nameStr);
-        // Tránh nhận nhầm các câu hỏi khóa học thành tên người
-        const isQuestion = normName.includes('b1') || normName.includes('b2') || normName.includes('c') || normName.includes('gia') || normName.includes('hoc phi');
-        
-        if (nameStr.length >= 2 && nameStr.length <= 40 && !isQuestion) {
+        const normName = normalizeText(nameStr); // Chuẩn hóa để kiểm tra
+
+        // Danh sách từ khóa câu hỏi mở rộng để tránh nhận nhầm tên
+        const questionKeywords = [
+          'b1', 'b2', 'hang c', 'xe tai', 'hoc phi', 'gia', 'bao nhieu', 'thoi gian', 'bao lau', 'dang ky', 'ho so', 'dia chi', 'o dau'
+        ];
+        const isQuestion = questionKeywords.some(kw => normName.includes(kw));
+
+        // Đếm số từ trong chuỗi nhập vào
+        const wordCount = nameStr.split(/\s+/).length;
+
+        // Điều kiện mới: Tên phải có ít nhất 2 ký tự, không phải là câu hỏi, và có từ 1-4 từ.
+        if (nameStr.length >= 2 && nameStr.length <= 40 && !isQuestion && wordCount <= 4) {
           const formattedName = capitalizeName(nameStr);
           try {
             await Contact.findByIdAndUpdate(pendingData.contactId, {
@@ -102,7 +110,7 @@ router.post('/', async (req, res) => {
     let phoneReply = '';
     if (phoneMatch) {
       const extractedPhone = phoneMatch[0];
-      
+
       // ---> Cố gắng lấy Tên ngay trong cùng một câu chứa SĐT
       const extractedName = extractNameFromText(latestMessage, extractedPhone);
 
@@ -118,7 +126,7 @@ router.post('/', async (req, res) => {
         // Đánh dấu SĐT đã được xử lý và tự động xóa khỏi bộ nhớ sau 24h
         recentPhones.add(extractedPhone);
         setTimeout(() => recentPhones.delete(extractedPhone), 24 * 60 * 60 * 1000);
-        
+
         // Tăng biến đếm số lượng SĐT của IP này
         ipData.count += 1;
         ipPhoneSubmissions.set(clientIp, ipData);
@@ -151,25 +159,25 @@ router.post('/', async (req, res) => {
         }
       } else {
         console.log(`[Spam Guard] Đã nhận diện lại SĐT ${extractedPhone} từ IP ${clientIp}`);
-        
+
         if (extractedName && pendingNames.has(clientIp)) {
-            // Xử lý trường hợp khách nhập lại để bổ sung tên (VD: Vừa nãy gõ SĐT, AI hỏi tên, khách gõ lại "Tâm 0912...")
-            const pendingData = pendingNames.get(clientIp);
-            await Contact.findByIdAndUpdate(pendingData.contactId, { fullname: `${extractedName} (Từ Chatbot AI)` }).catch(()=>{});
-            pendingNames.delete(clientIp);
-            phoneReply = `Cảm ơn bạn ${extractedName}, số điện thoại ${extractedPhone} đã được hệ thống ghi nhận. Chuyên viên sẽ sớm gọi cho bạn nhé!`;
+          // Xử lý trường hợp khách nhập lại để bổ sung tên (VD: Vừa nãy gõ SĐT, AI hỏi tên, khách gõ lại "Tâm 0912...")
+          const pendingData = pendingNames.get(clientIp);
+          await Contact.findByIdAndUpdate(pendingData.contactId, { fullname: `${extractedName} (Từ Chatbot AI)` }).catch(() => { });
+          pendingNames.delete(clientIp);
+          phoneReply = `Cảm ơn bạn ${extractedName}, số điện thoại ${extractedPhone} đã được hệ thống ghi nhận. Chuyên viên sẽ sớm gọi cho bạn nhé!`;
         } else {
-            phoneReply = `Số điện thoại ${extractedPhone} đã được hệ thống ghi nhận trước đó. Chuyên viên sẽ sớm liên hệ lại với bạn nhé!`;
-            if (pendingNames.has(clientIp)) {
-               phoneReply = `Hệ thống đã ghi nhận số ${extractedPhone}. Bạn cho mình xin Tên để chuyên viên tiện xưng hô nhé!`;
-            }
+          phoneReply = `Số điện thoại ${extractedPhone} đã được hệ thống ghi nhận trước đó. Chuyên viên sẽ sớm liên hệ lại với bạn nhé!`;
+          if (pendingNames.has(clientIp)) {
+            phoneReply = `Hệ thống đã ghi nhận số ${extractedPhone}. Bạn cho mình xin Tên để chuyên viên tiện xưng hô nhé!`;
+          }
         }
       }
     }
     // ----------------------------------------------------
 
     const products = await Product.find({ isVisible: { $ne: false } });
-    
+
     // --- LOGIC TRẢ LỜI TỰ ĐỘNG THEO TỪ KHÓA (KHÔNG DÙNG API NGOÀI) ---
     const normalizedMsg = normalizeText(latestMessage);
     let reply = '';
