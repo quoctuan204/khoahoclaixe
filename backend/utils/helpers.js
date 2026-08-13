@@ -22,11 +22,10 @@ const logActivity = async (req, action, target, targetId, details) => {
 };
 
 // Hàm gửi email bọc ngoài
-const sendEmail = async (subject, text) => {
+const sendEmail = async (to, subject, text) => {
   try {
-    // Thay email nhận bằng email của admin
-    await sendEmailUtil('nguyentuann29t12@gmail.com', subject, text);
-    console.log('Email sent successfully');
+    await sendEmailUtil(to, subject, text);
+    console.log(`Email sent successfully to ${to}`);
   } catch (error) {
     console.error('Error sending email:', error);
   }

@@ -1,6 +1,6 @@
 require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
 const mongoose = require('mongoose');
-// const Admin = require('../models/Admin'); // Tạm tắt Model Admin để tránh lỗi Schema Validation
+// const Admin = require('../models/Admin');
 const Role = require('../models/Role');
 const { PERMISSIONS } = require('../config/permissions');
 
@@ -43,7 +43,7 @@ const migrate = async () => {
   try {
     // 1. Kết nối tới Database
     await mongoose.connect(process.env.MONGO_URI);
-    console.log('✅ Kết nối MongoDB thành công.');
+    console.log('Kết nối MongoDB thành công.');
 
     // 2. Tạo hoặc tìm các Role mặc định và lấy ID của chúng
     const roleMap = {};
@@ -60,21 +60,21 @@ const migrate = async () => {
     }
     // Xử lý trường hợp role 'staff' cũ được map sang 'editor'
     if (roleMap.editor) {
-        roleMap.staff = roleMap.editor;
+      roleMap.staff = roleMap.editor;
     }
 
     // 3. Chuyển đổi dữ liệu cho các Admin
     console.log('\n--- Bước 2: Chuyển đổi tài khoản Admin ---');
-    
+
     // FIX: Sử dụng native driver để lấy dữ liệu thô, tránh bị Mongoose chặn do sai kiểu dữ liệu
     const adminsToMigrate = await mongoose.connection.db.collection('admins').find({ role: { $type: 'string' } }).toArray();
 
     if (adminsToMigrate.length === 0) {
-      console.log('✅ Không có tài khoản Admin nào cần chuyển đổi.');
+      console.log('Không có tài khoản Admin nào cần chuyển đổi.');
       return;
     }
 
-    console.log(`🔍 Tìm thấy ${adminsToMigrate.length} tài khoản cần chuyển đổi...`);
+    console.log(`Tìm thấy ${adminsToMigrate.length} tài khoản cần chuyển đổi...`);
     for (const admin of adminsToMigrate) {
       const oldRoleName = admin.role; // Đây là string, ví dụ: 'admin'
       const newRoleId = roleMap[oldRoleName];
@@ -84,12 +84,12 @@ const migrate = async () => {
         console.log(`  -> Đã chuyển đổi tài khoản '${admin.username}' (role: "${oldRoleName}")`);
       }
     }
-    console.log(`\n✅ Hoàn thành!`);
+    console.log(`\nHoàn thành!`);
   } catch (error) {
-    console.error('\n❌ Đã xảy ra lỗi trong quá trình chuyển đổi:', error);
+    console.error('\nĐã xảy ra lỗi trong quá trình chuyển đổi:', error);
   } finally {
     await mongoose.disconnect();
-    console.log('🔌 Đã ngắt kết nối MongoDB.');
+    console.log('Đã ngắt kết nối MongoDB.');
   }
 };
 

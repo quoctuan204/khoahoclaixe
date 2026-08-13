@@ -41,20 +41,27 @@ router.post('/register-course', async (req, res) => {
 
     const { firstName, lastName, phone, email, course, courseName, cccd, address, note } = req.body; 
 
-    const subject = 'Đăng ký khóa học mới';
-    const text = `
-      Đăng ký khóa học: ${courseName || course}
-      Họ: ${lastName}
-      Tên: ${firstName}
-      SĐT: ${phone}
-      Email: ${email}
-      CCCD: ${cccd || 'N/A'}
-      Địa chỉ: ${address || 'N/A'}
-      Ghi chú: ${note || 'N/A'}
-    `;
+    const subject = 'Xác nhận đăng ký khóa học';
+    const text = `Chào ${lastName} ${firstName},
+
+Cảm ơn bạn đã đăng ký khóa học tại trung tâm của chúng tôi. Chúng tôi đã nhận được thông tin đăng ký của bạn.
+
+Thông tin chi tiết đăng ký:
+- Khóa học: ${courseName || course}
+- Họ và tên: ${lastName} ${firstName}
+- Số điện thoại: ${phone}
+- Email: ${email}
+- CCCD/CMND: ${cccd || 'N/A'}
+- Địa chỉ: ${address || 'N/A'}
+- Ghi chú: ${note || 'N/A'}
+
+Chúng tôi sẽ liên hệ với bạn qua số điện thoại ${phone} trong thời gian sớm nhất để tư vấn chi tiết và hoàn tất thủ tục nhập học.
+
+Trân trọng,
+Trung tâm Đào tạo Lái xe`;
 
     try {
-      await sendEmail(subject, text);
+      await sendEmail(email, subject, text);
     } catch (emailErr) { console.error('Lỗi gửi email:', emailErr); }
 
     res.status(200).json({ message: 'Registration successful' });
@@ -166,7 +173,7 @@ router.post('/contact-advice', async (req, res) => {
     `;
 
     try {
-      await sendEmail(subject, text);
+      await sendEmail('nguyentuann29t12@gmail.com', subject, text);
     } catch (emailErr) { console.error('Lỗi gửi email:', emailErr); }
 
     res.status(200).json({ message: 'Advice request successful' });

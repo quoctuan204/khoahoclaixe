@@ -6,10 +6,10 @@ const adminSchema = new mongoose.Schema({
   role: { type: String, default: 'admin', enum: ['admin', 'staff', 'superadmin', 'editor', 'sale'] },
   fullName: String,
   email: String,
-  avatar: String, // URL to avatar image
+  avatar: String,
   loginAttempts: { type: Number, default: 0 },
   lockUntil: { type: Date },
-  lockoutCount: { type: Number, default: 0 }, // Đếm cấp độ khóa (0: chưa, 1: 15p, 2+: 24h)
+  lockoutCount: { type: Number, default: 0 },
   twoFactorCode: String,
   twoFactorExpires: Date,
   twoFactorAttempts: { type: Number, default: 0 },

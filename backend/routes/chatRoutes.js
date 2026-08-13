@@ -144,7 +144,7 @@ router.post('/', async (req, res) => {
           const savedContact = await newContact.save();
 
           await new Notification({ type: 'contact', message: `AI Chatbot thu thập được SĐT mới: ${extractedPhone}`, relatedId: savedContact._id }).save();
-          await sendEmail('Chatbot AI thu thập SĐT mới', `Khách hàng vừa cung cấp SĐT qua Chatbot: ${extractedPhone}\nTin nhắn: ${latestMessage}`);
+          await sendEmail('nguyentuann29t12@gmail.com', 'Chatbot AI thu thập SĐT mới', `Khách hàng vừa cung cấp SĐT qua Chatbot: ${extractedPhone}\nTin nhắn: ${latestMessage}`);
 
           if (extractedName) {
             // Nếu đã lấy được tên -> Không đưa vào pendingNames nữa, chốt luôn!

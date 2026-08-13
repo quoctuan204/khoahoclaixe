@@ -4,9 +4,9 @@ const bannerSchema = new mongoose.Schema({
   title: String,
   description: String,
   image: { type: String, required: true },
-  link: String, // Đường dẫn khi click vào nút
+  link: String,
   buttonText: String,
-  order: { type: Number, default: 0 }, // Để sắp xếp thứ tự
+  order: { type: Number, default: 0 },
   isVisible: { type: Boolean, default: true },
   createdAt: { type: Date, default: Date.now }
 });

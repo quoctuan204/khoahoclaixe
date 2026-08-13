@@ -5,7 +5,7 @@ const contactSchema = new mongoose.Schema({
   phone: { type: String, required: true },
   course: String,
   note: String,
-  status: { type: String, default: 'pending' }, // pending, contacted
+  status: { type: String, default: 'pending' },
   createdAt: { type: Date, default: Date.now }
 });
 
